@@ -1,0 +1,13 @@
+version: "2"
+sql:
+  - engine: "sqlite"
+    queries: "app/sql/query.sql"
+    schema: "app/sql/schema.sql"
+    gen:
+      go:
+        package: "db"
+        out: "app/db"
+        overrides:
+        - db_type: "TIMESTAMP"
+          go_type:
+            type: "UnixTime"

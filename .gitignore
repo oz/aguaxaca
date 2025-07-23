@@ -1,0 +1,7 @@
+images/*.jpg
+
+// SQLite files
+*.db
+
+// Go build
+aguaxaca
