@@ -120,8 +120,13 @@ func (nc *NitterCollector) downloadImage(url string) (string, error) {
 }
 
 // Get a rude colly collector that mimicks Firefox headers.
+//
+// FIXME: this is okay for local testing/development. But this should
+// not be published. Either use Nitter's RSS feed, or a private
+// Nitter instance, or get permission.
 func (nc *NitterCollector) getFirefoxCollector() *colly.Collector {
 	c := colly.NewCollector(
+		// Hiding in plain sight...
 		colly.UserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:140.0) Gecko/20100101 Firefox/140.0"),
 
 		// Don't use that with a public Nitter instance.

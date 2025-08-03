@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const completeImport = `-- name: CompleteImport :exec
@@ -43,10 +44,10 @@ RETURNING id, date, schedule, location_type, location_name, created_at
 `
 
 type CreateDeliveryParams struct {
-	Date         UnixTime
-	Schedule     string
-	LocationType string
-	LocationName string
+	Date         UnixTime `db:"date" json:"date"`
+	Schedule     string   `db:"schedule" json:"schedule"`
+	LocationType string   `db:"location_type" json:"location_type"`
+	LocationName string   `db:"location_name" json:"location_name"`
 }
 
 func (q *Queries) CreateDelivery(ctx context.Context, arg CreateDeliveryParams) (Delivery, error) {
@@ -78,8 +79,8 @@ RETURNING id, file_path, file_hash, created_at, completed_at, failed_at, runs
 `
 
 type CreateImportParams struct {
-	FilePath string
-	FileHash int64
+	FilePath string `db:"file_path" json:"file_path"`
+	FileHash int64  `db:"file_hash" json:"file_hash"`
 }
 
 func (q *Queries) CreateImport(ctx context.Context, arg CreateImportParams) (Import, error) {
@@ -141,11 +142,12 @@ func (q *Queries) GetDelivery(ctx context.Context, id int64) (Delivery, error) {
 const getPendingImports = `-- name: GetPendingImports :many
 SELECT id, file_path, file_hash, created_at, completed_at, failed_at, runs FROM imports
 WHERE completed_at IS NULL
+AND runs < ?
 ORDER BY created_at DESC
 `
 
-func (q *Queries) GetPendingImports(ctx context.Context) ([]Import, error) {
-	rows, err := q.db.QueryContext(ctx, getPendingImports)
+func (q *Queries) GetPendingImports(ctx context.Context, runs sql.NullInt64) ([]Import, error) {
+	rows, err := q.db.QueryContext(ctx, getPendingImports, runs)
 	if err != nil {
 		return nil, err
 	}

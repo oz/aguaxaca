@@ -26,7 +26,7 @@ WHERE id = ?;
 -- name: GetPendingImports :many
 SELECT * FROM imports
 WHERE completed_at IS NULL
-AND runs <= ?
+AND runs < ?
 ORDER BY created_at DESC;
 
 -- name: CountImportsByHash :one

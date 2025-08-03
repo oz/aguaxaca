@@ -7,7 +7,17 @@ sql:
       go:
         package: "db"
         out: "app/db"
+        emit_json_tags: true
+        emit_db_tags: true
         overrides:
-        - db_type: "TIMESTAMP"
-          go_type:
-            type: "UnixTime"
+        # Non-nullable timestamps
+          - db_type: "TIMESTAMP"
+            nullable: false
+            go_type:
+              type: "UnixTime"
+        # Nullable timestamps (null value -> nil pointer)
+          - db_type: "TIMESTAMP"
+            nullable: true
+            go_type:
+              type: "UnixTime"
+              pointer: true

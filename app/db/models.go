@@ -9,20 +9,20 @@ import (
 )
 
 type Delivery struct {
-	ID           int64
-	Date         UnixTime
-	Schedule     string
-	LocationType string
-	LocationName string
-	CreatedAt    UnixTime
+	ID           int64    `db:"id" json:"id"`
+	Date         UnixTime `db:"date" json:"date"`
+	Schedule     string   `db:"schedule" json:"schedule"`
+	LocationType string   `db:"location_type" json:"location_type"`
+	LocationName string   `db:"location_name" json:"location_name"`
+	CreatedAt    UnixTime `db:"created_at" json:"created_at"`
 }
 
 type Import struct {
-	ID          int64
-	FilePath    string
-	FileHash    int64
-	CreatedAt   UnixTime
-	CompletedAt sql.NullTime
-	FailedAt    sql.NullTime
-	Runs        sql.NullInt64
+	ID          int64         `db:"id" json:"id"`
+	FilePath    string        `db:"file_path" json:"file_path"`
+	FileHash    int64         `db:"file_hash" json:"file_hash"`
+	CreatedAt   UnixTime      `db:"created_at" json:"created_at"`
+	CompletedAt *UnixTime     `db:"completed_at" json:"completed_at"`
+	FailedAt    *UnixTime     `db:"failed_at" json:"failed_at"`
+	Runs        sql.NullInt64 `db:"runs" json:"runs"`
 }

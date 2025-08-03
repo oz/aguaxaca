@@ -2,6 +2,7 @@ images/*.jpg
 
 // SQLite files
 *.db
+*.db-journal
 
 // Go build
 aguaxaca
