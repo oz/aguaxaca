@@ -1,32 +1,39 @@
-# Aguaxaxa
+# Aguaxaca
 
 As of 2025, Oaxaca's water distribution schedules are shared daily
 through images, on two social networks: Facebook and X (formerly
-Twitter). I guess it's a workaround to message length and format
-limitations on these platforms, but it also excludes people with visual
-disabilities, and makes it impossible to search through this data.
+Twitter). I guess it's a workaround to format and message length
+limitations of these platforms, but it excludes people with visual
+disabilities, and also makes it impossible to search through this data.
 
 This also forces the citizens to create accounts on privately owned
-social networks. There is no public historical data about the schedules.
+social networks. There is no public historical data about the schedules,
+etc.
 
-This program won't solve these issues because they're not all technical,
-but it's a workaround to:
+This program won't solve these issues because they are not all
+technical, but it's a small workaround to:
 
-  1. extract data from public notices,
-  2. share the same data in text form (accessible!), and
-  3. providing access to some historical records.
+1. extract data from public notices,
+2. share the same data in text form (accessible!), and
+3. providing access to some historical records.
 
 **The project is still very much a work-in-progress. Don't use it now!**
 
 # Technical information
 
-The project is organized as follow:
+The repository is organized as follow:
 
 - `app/` —  the core application types.
 - `collector/` —  collect images from social networks.
 - `parser/` —  parse collected images into structured data structures.
 
 ## Data collection
+
+To download public schedules shared recently, run:
+
+```
+aguaxaca collect
+```
 
 Data collection currently relies on [Nitter](https://nitter.net), a pure
 HTML front-end for X, to fetch the images from the @SOAPA_Oax account.
@@ -35,8 +42,9 @@ the data once or twice a day, because that's our source's publication
 schedule.
 
 This means about 3-4 requests per 24h, which doesn't seem abusive for
-testing / developing, **but** run your own Nitter instance, or get
-permission to use a public instance, for a long-term solution.
+testing / developing, **but** for a long-term solution: run your own
+Nitter instance, or get permission to use a public instance. Be nice,
+okay? 😊
 
 Other improvements to explore:
 
@@ -52,20 +60,26 @@ Other improvements to explore:
       so. We could get by with 24h cache, but let's play it safe in case
       we want to debug stuff.
 
+
 ## Text parsing
 
-Tesseract has always been an okay open-source OCR program, but because
-of the image formatting, it is currently unable to extract text from the
-notices. To work around this, we currently rely on genAI for OCR-ing
-*and* formatting the output.
+To extract text, and store data from downloaded images, run:
 
-The code is tailored for Anthropic's LLM (Sonnet 3.7 is completely fine)
-to extract information from the images. This means that you will need an
-Anthropic API key, and some credits, to run the "parser". Yay.
+```
+aguaxaca analyze
+```
 
-With the correct hardware, using Ollama with a different model would
-work great for example, but that's more expensive than paying Anthropic
-for now.
+Tesseract is an okay open-source OCR program, but because of the layout
+of SOAPA's images, it won't work well here. Instead, we rely on genAI
+for OCR-ing *and* formatting the output.
+
+The code is tailored for Anthropic's APIs (Sonnet 3.7 model is
+completely fine) to extract information from the images. This means
+that you will need an Anthropic API key, and some credits, to run the
+"parser". Yay. 💸
+
+With the correct hardware, using a local model would work great, but
+that's more expensive than paying Anthropic for now.
 
 Look into `parser/parser.go` for a prompt that will extract information from
 SOAPA_Oax's publications. Here's a sample response from Sonnet 3.7:
@@ -88,24 +102,29 @@ date,schedule,location_type,location_name
 ### Dev Notes
 
 - [x] Build a go client to query https://docs.anthropic.com/en/api/messages
-- [ ] CSV parser for LLM response, to a nicer data structure for storage.
+- [x] CSV parser for LLM response, to a nicer data structure for storage.
+- [ ] Add CLI flag to store LLM responses on disk.
+
 
 ## Data store
-
 
 ### Dev notes
 
 No need for anything very fancy. Sqlite will be fine for a good while.
 
 It would be nice to search and match names like "América" if we type
-"amér" or even "ame": ignoring case, and accentuated characters, buy
+"amér" or even "ame": ignoring case, and accentuated characters, but
 we'll need more than Sqlite at that point.
+
+- [ ] Check Sqlite's "FTS" module, and create/update triggers.
+- [ ] Backup with litestream.
 
 ## Web
 
 1. Use a small router (e.g. Chi) to serve the data as JSON.
 2. Build a light front-end, mobile first.
 3. Cache all the things.
+4. Track some stats on a prometheus endpoint, for fun.
 
 Some ideas for the routes.
 
