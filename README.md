@@ -73,13 +73,11 @@ Tesseract is an okay open-source OCR program, but because of the layout
 of SOAPA's images, it won't work well here. Instead, we rely on genAI
 for OCR-ing *and* formatting the output.
 
-The code is tailored for Anthropic's APIs (Sonnet 3.7 model is
-completely fine) to extract information from the images. This means
-that you will need an Anthropic API key, and some credits, to run the
-"parser". Yay. 💸
-
-With the correct hardware, using a local model would work great, but
-that's more expensive than paying Anthropic for now.
+The code is tailored for Anthropic's APIs to extract information from
+the images (target is Sonnet 3.7 model for now). This means that you
+will need an Anthropic API key, and some credits, to run the parser.
+Yay. With the correct hardware, using a local model would also work, but
+that's more expensive than Anthropic for now. 💸
 
 Look into `parser/parser.go` for a prompt that will extract information from
 SOAPA_Oax's publications. Here's a sample response from Sonnet 3.7:
@@ -101,7 +99,7 @@ date,schedule,location_type,location_name
 
 ### Dev Notes
 
-- [x] Build a go client to query https://docs.anthropic.com/en/api/messages
+- [x] Go client/lib to query https://docs.anthropic.com/en/api/messages
 - [x] CSV parser for LLM response, to a nicer data structure for storage.
 - [ ] Add CLI flag to store LLM responses on disk.
 
@@ -110,21 +108,22 @@ date,schedule,location_type,location_name
 
 ### Dev notes
 
-No need for anything very fancy. Sqlite will be fine for a good while.
+Sqlite should be fine for a long while.
 
 It would be nice to search and match names like "América" if we type
 "amér" or even "ame": ignoring case, and accentuated characters, but
-we'll need more than Sqlite at that point.
+we could need more than the basic Sqlite at that point. See below:
 
 - [ ] Check Sqlite's "FTS" module, and create/update triggers.
 - [ ] Backup with litestream.
 
 ## Web
 
-1. Use a small router (e.g. Chi) to serve the data as JSON.
-2. Build a light front-end, mobile first.
+1. Use a small router (e.g. Chi?) to serve the data as JSON, or
+   plain HTML, with some HTMX JS sprinkled on top, or both...
+2. Build a *light* front-end anyway, mobile first.
 3. Cache all the things.
-4. Track some stats on a prometheus endpoint, for fun.
+4. Track stuff with a prometheus endpoint, for fun.
 
 Some ideas for the routes.
 
