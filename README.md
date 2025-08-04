@@ -2,16 +2,19 @@
 
 As of 2025, Oaxaca's water distribution schedules are shared daily
 through images, on two social networks: Facebook and X (formerly
-Twitter). This forces the inhabitants to create accounts on these social
-networks to know when they may receive the precious liquid. There is no
-public historical data about the schedules, and the information published as
-raw images isn't accessible.
+Twitter). I guess it's a workaround to message length and format
+limitations on these platforms, but it also excludes people with visual
+disabilities, and makes it impossible to search through this data.
 
-This program provides a solution for these issues by:
+This also forces the citizens to create accounts on privately owned
+social networks. There is no public historical data about the schedules.
 
-  1. extracting data from public notices,
-  2. sharing the same data in text form, and
-  3. providing access to previous distribution dates.
+This program won't solve these issues because they're not all technical,
+but it's a workaround to:
+
+  1. extract data from public notices,
+  2. share the same data in text form (accessible!), and
+  3. providing access to some historical records.
 
 **The project is still very much a work-in-progress. Don't use it now!**
 
@@ -19,7 +22,7 @@ This program provides a solution for these issues by:
 
 The project is organized as follow:
 
-- `app/` —  the core application type.
+- `app/` —  the core application types.
 - `collector/` —  collect images from social networks.
 - `parser/` —  parse collected images into structured data structures.
 
@@ -27,17 +30,19 @@ The project is organized as follow:
 
 Data collection currently relies on [Nitter](https://nitter.net), a pure
 HTML front-end for X, to fetch the images from the @SOAPA_Oax account.
-We rely on the main instance of Nitter, with a scraper to get the data
-once or twice a day.
+We rely on the main instance of Nitter **for now**, with a scraper to get
+the data once or twice a day, because that's our source's publication
+schedule.
 
-**This should mean about 3-4 requests per 24h, which doesn't seem
-abusive but running your own Nitter instance is a good idea.**
+This means about 3-4 requests per 24h, which doesn't seem abusive for
+testing / developing, **but** run your own Nitter instance, or get
+permission to use a public instance, for a long-term solution.
 
-This could be improved in a few ways. For example:
+Other improvements to explore:
 
-- Scrape X directly, or
-- Host our own private Nitter instance,
-- Use Nitter's RSS features instead of scraping (RSS is not always
+- Scrape X directly (probably stupidly expensive these days), or
+- scrape Facebook, or
+- use Nitter's RSS features instead of scraping (RSS is not always
   available on public Nitter instances).
 
 ### Dev notes
@@ -49,37 +54,35 @@ This could be improved in a few ways. For example:
 
 ## Text parsing
 
-Tesseract is a good open-source OCR program, but because of the image
-formatting, it is currently unable to extract text from the notices. To
-work around this, we currently rely on Anthropic's LLM (Sonnet 3.7) to
-extract information from the images.
+Tesseract has always been an okay open-source OCR program, but because
+of the image formatting, it is currently unable to extract text from the
+notices. To work around this, we currently rely on genAI for OCR-ing
+*and* formatting the output.
 
-This means that you will need an Anthropic API key, and some credits, to
-run the "parser". Yay.
+The code is tailored for Anthropic's LLM (Sonnet 3.7 is completely fine)
+to extract information from the images. This means that you will need an
+Anthropic API key, and some credits, to run the "parser". Yay.
 
-Here's a prompt that will successfully extract data from the water
-distribution images:
+With the correct hardware, using Ollama with a different model would
+work great for example, but that's more expensive than paying Anthropic
+for now.
 
-See `parser/parser.go` for a prompt that will extract information from
-SOAPA_Oax's publications.
-
-Here's a sample answer from Sonnet 3.7:
+Look into `parser/parser.go` for a prompt that will extract information from
+SOAPA_Oax's publications. Here's a sample response from Sonnet 3.7:
 
 ```
 date,schedule,location_type,location_name
-2025-03-16,matutino-vespertino,COLONIA,Unión
-2025-03-16,matutino-vespertino,COLONIA,Periodista
-2025-03-16,matutino-vespertino,COLONIA,Francisco I. Madero
-2025-03-16,matutino-vespertino,COLONIA,Ixcotel
-2025-03-16,matutino-vespertino,COLONIA,Carretera antigua a Monte Albán
-2025-03-16,matutino-vespertino,COLONIA,Hospital Civil
-2025-03-16,matutino-vespertino,FRACCIONAMIENTO,Elsa
-2025-03-16,matutino-vespertino,EJIDO,Guadalupe Victoria (sectores 3 y 4 parte baja)
-2025-03-16,vespertino-nocturno,COLONIA,Reforma (parte baja)
-2025-03-16,vespertino-nocturno,COLONIA,América Norte (parte alta)
-2025-03-16,vespertino-nocturno,COLONIA,Lomas del Crestón (parte baja y media)
-2025-03-16,vespertino-nocturno,COLONIA,Estrella (parte baja)
-2025-03-16,vespertino-nocturno,COLONIA,Eliseo Jiménez Ruiz Norte
+2025-07-21,matutino-vespertino,colonia,Libertad
+2025-07-21,matutino-vespertino,colonia,10 de Abril
+2025-07-21,matutino-vespertino,colonia,Monte Albán
+2025-07-21,matutino-vespertino,colonia,Adolfo López Mateos
+2025-07-21,matutino-vespertino,colonia,Presidente Juárez
+2025-07-21,matutino-vespertino,colonia,Margarita Maza de Juárez
+2025-07-21,matutino-vespertino,colonia,Bosque Sur
+2025-07-21,matutino-vespertino,colonia,"Jardín (sector Bugambilias)"
+2025-07-21,matutino-vespertino,fraccionamiento,Jardines de Las Lomas
+2025-07-21,matutino-vespertino,ejido,"Guadalupe Victoria (sector 1, 2ª sección Oeste)"
+2025-07-21,matutino-vespertino,unidad,Ferrocarrilera
 ```
 
 ### Dev Notes
@@ -95,12 +98,16 @@ date,schedule,location_type,location_name
 No need for anything very fancy. Sqlite will be fine for a good while.
 
 It would be nice to search and match names like "América" if we type
-"amér" or even "ame": ignoring case, and accentuated characters.
+"amér" or even "ame": ignoring case, and accentuated characters, buy
+we'll need more than Sqlite at that point.
 
 ## Web
 
 1. Use a small router (e.g. Chi) to serve the data as JSON.
 2. Build a light front-end, mobile first.
+3. Cache all the things.
+
+Some ideas for the routes.
 
 ### Search distribution schedules
 
@@ -108,15 +115,17 @@ It would be nice to search and match names like "América" if we type
 
 Without filter: get the latest schedules in the DB.
 
-Limit to the last 24h by default.
+Limit to the last 3-4 days by default.
 
 `GET /schedules?since=YYYYMMDD`
 
-Get all schedules since date.
+Get all schedules since date. This should probably have a limit, with a
+notice to contact to get access to the full dataset.
 
 `GET /schedules/ids[]=1`
 
-Get schedules for one or several zone IDs.
+Get schedules for one or several zone IDs (supposing that we store zones
+in their own table).
 
 `GET /schedules?zone=%s`
 
