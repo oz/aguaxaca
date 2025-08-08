@@ -20,7 +20,7 @@ func (ut *UnixTime) Scan(src any) error {
 
 	switch v := src.(type) {
 	case int64:
-		ut.Time = time.Unix(v, 0)
+		ut.Time = time.Unix(v, 0).UTC()
 	default:
 		return fmt.Errorf("unsupported type for UnixTime: %T, expected int64", src)
 	}
@@ -32,5 +32,5 @@ func (ut UnixTime) Value() (driver.Value, error) {
 }
 
 func Now() UnixTime {
-	return UnixTime{Time: time.Now()}
+	return UnixTime{Time: time.Now().UTC()}
 }

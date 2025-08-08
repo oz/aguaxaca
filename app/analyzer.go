@@ -119,7 +119,7 @@ func (a *Analyzer) ImportData(im *db.Import, csvData string) error {
 
 		// Create delivery record with lowercase location_type
 		_, err = queries.CreateDelivery(a.app.Ctx, db.CreateDeliveryParams{
-			Date:         db.UnixTime{Time: date},
+			Date:         db.UnixTime{Time: date.UTC()},
 			Schedule:     strings.ToLower(record[1]),
 			LocationType: strings.ToLower(record[2]), // Ensure lowercase
 			LocationName: record[3],
