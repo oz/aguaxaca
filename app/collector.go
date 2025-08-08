@@ -18,13 +18,21 @@ package app
 
 import (
 	"fmt"
-	"hash/fnv"
+	"io"
 	"log"
 	"os"
+
+	"github.com/dchest/siphash"
 
 	"git.cypr.io/oz/aguaxaca/app/db"
 	"git.cypr.io/oz/aguaxaca/collector"
 )
+
+// SipHashKey is a prefectly random key (used to dedup files, not sensitive).
+var SipHashKey = [16]byte{
+	0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+	0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
+}
 
 type Collector struct {
 	collector collector.Collector
@@ -41,10 +49,9 @@ func (app *App) NewCollector(collector collector.Collector) *Collector {
 // Collect runs an image collector to fetch images, and create import
 // records in the local DB.
 func (c *Collector) Collect() error {
-	// Download images
 	images, err := c.collector.DownloadImages()
 	if err != nil {
-		return fmt.Errorf("failed image download: %v", err)
+		return fmt.Errorf("image download: %v", err)
 	}
 	log.Println("DEBUG: found images:", images)
 
@@ -56,7 +63,7 @@ func (c *Collector) Collect() error {
 			continue
 		}
 
-		if err := c.CreateImportIfNotExists(path, fileHash); err != nil {
+		if err := c.CreateImportIfNotExists(path, int64(fileHash)); err != nil {
 			log.Printf("Error importing %s: %v", path, err)
 			continue
 		}
@@ -75,23 +82,27 @@ func (c *Collector) CreateImportIfNotExists(path string, hash int64) error {
 		return nil
 	}
 
-	// Insert new import
 	imp, err := queries.CreateImport(c.app.Ctx, db.CreateImportParams{FilePath: path, FileHash: hash})
 	if err != nil {
 		return fmt.Errorf("create import record for '%s': %v", path, err)
 	}
-	log.Printf("Created new import job: #%d", imp.ID)
-	return nil
+	log.Printf("Created new import job #%d for %s", imp.ID, imp.FilePath)
 
+	return nil
 }
 
-func hashFile(path string) (int64, error) {
-	data, err := os.ReadFile(path)
+// hashFile uses siphash for deduplication.
+func hashFile(filepath string) (uint64, error) {
+	file, err := os.Open(filepath)
 	if err != nil {
 		return 0, err
 	}
-	h := fnv.New64a()
-	h.Write(data)
-	u := h.Sum64()
-	return int64(u), nil
+	defer file.Close()
+
+	hasher := siphash.New(SipHashKey[:])
+	if _, err := io.Copy(hasher, file); err != nil {
+		return 0, err
+	}
+
+	return hasher.Sum64(), nil
 }

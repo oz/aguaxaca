@@ -17,6 +17,8 @@
 package collector
 
 import (
+	"errors"
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -25,26 +27,25 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
-// BaseDomain is the Nitter domain where we searth tweets.
-// const defaultBaseDomain = "https://nitter.net"
+// defaultBaseDomain is the Nitter instance where we scrape tweets.
 const defaultBaseDomain = "https://nitter.net"
 
-// OutputDir is the directory where images will be saved.
-const defaultOutputDir = "./images"
+// defaultDownloadDir is where images will be saved.
+const defaultDownloadDir = "./images"
 
 type NitterCollector struct {
-	BaseDomain string
-	OutputDir  string
-	Account    string
+	BaseDomain  string
+	DownloadDir string
+	Account     string
 }
 
 // NewNitterCollector builds a default Nitter collector / scraper.
 func NewNitterCollector(account string) *NitterCollector {
 	// TODO: make this configurable
 	return &NitterCollector{
-		BaseDomain: defaultBaseDomain,
-		OutputDir:  defaultOutputDir,
-		Account:    account,
+		BaseDomain:  defaultBaseDomain,
+		DownloadDir: defaultDownloadDir,
+		Account:     account,
 	}
 }
 
@@ -54,10 +55,18 @@ func (nc *NitterCollector) DownloadImages() ([]string, error) {
 	c := nc.getFirefoxCollector()
 	files := []string{}
 
-	err := os.Mkdir(nc.OutputDir, 0750)
-	if err != nil && !os.IsExist(err) {
+	if err := os.Mkdir(nc.DownloadDir, 0750); err != nil && !os.IsExist(err) {
 		return nil, err
 	}
+
+	// Collect all scraping errors
+	var err error = nil
+
+	c.OnHTML("title", func(e *colly.HTMLElement) {
+		if strings.Index(e.Text, "Maintenance") == 0 {
+			err = errors.Join(fmt.Errorf("server unavailable (maintenance)"))
+		}
+	})
 
 	// Lookup timeline items
 	c.OnHTML(".timeline-item", func(e *colly.HTMLElement) {
@@ -89,13 +98,14 @@ func (nc *NitterCollector) DownloadImages() ([]string, error) {
 	log.Println("HTML scraper: waiting for pending requests")
 	c.Wait()
 	log.Println("HTML scraper: done.")
-	return files, nil
+
+	return files, err
 }
 
 // Try to download image once.
 func (nc *NitterCollector) downloadImage(url string) (string, error) {
 	fileName := path.Base(url)
-	dest := path.Join(nc.OutputDir, fileName)
+	dest := path.Join(nc.DownloadDir, fileName)
 
 	// This check avoids an unnecessary copy from Colly's local cache.
 	if fileExists(dest) {

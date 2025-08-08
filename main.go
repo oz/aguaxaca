@@ -39,7 +39,7 @@ func main() {
 		Exec: func(context.Context, []string) error {
 			c := app.NewCollector(collector.NewNitterCollector("SOAPA_Oax"))
 			if err := c.Collect(); err != nil {
-				log.Fatalf("Import error: %v", err)
+				log.Fatalf("Collector error: %v", err)
 			}
 
 			return nil
