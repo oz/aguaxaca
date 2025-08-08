@@ -58,7 +58,7 @@ func (a *Analyzer) ProcessPendingImports() (int, error) {
 
 	imCount := 0
 	for _, im := range imports {
-		log := a.log.With("import", im.ID, "runs", im.Runs)
+		log := a.log.With("import", im.ID, "runs", im.Runs.Int64)
 
 		log.Info("analyzing image")
 		csvData, err := parser.ParseFileWithPrompt(a.app.Ctx, im.FilePath, parser.DefaultCSVPrompt)
