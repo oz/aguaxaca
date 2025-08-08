@@ -21,6 +21,23 @@
             h1 {
                 color: #0066cc;
             }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+            }
+            th,
+            td {
+                padding: 8px 12px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            tr:hover {
+                background-color: #f5f5f5;
+            }
         </style>
     </head>
     <body>
@@ -32,6 +49,32 @@
                 Bienvenido a Aguaxaca, un proyecto para hacer accesible la
                 información sobre distribución de agua en Oaxaca.
             </p>
+
+            <h2>Entregas Recientes de Agua</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Horario</th>
+                        <th>Tipo de Ubicación</th>
+                        <th>Ubicación</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Deliveries}}
+                    <tr>
+                        <td>{{.Date.Time.Format "02/01/2006"}}</td>
+                        <td>{{.Schedule}}</td>
+                        <td>{{.LocationType}}</td>
+                        <td>{{.LocationName}}</td>
+                    </tr>
+                    {{else}}
+                    <tr>
+                        <td colspan="4">No hay entregas disponibles.</td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
         </main>
     </body>
 </html>

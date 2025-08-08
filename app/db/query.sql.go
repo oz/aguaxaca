@@ -179,11 +179,12 @@ func (q *Queries) GetPendingImports(ctx context.Context, runs sql.NullInt64) ([]
 
 const listDeliveries = `-- name: ListDeliveries :many
 SELECT id, date, schedule, location_type, location_name, created_at FROM deliveries
-ORDER BY date
+WHERE date > ?
+ORDER BY date DESC
 `
 
-func (q *Queries) ListDeliveries(ctx context.Context) ([]Delivery, error) {
-	rows, err := q.db.QueryContext(ctx, listDeliveries)
+func (q *Queries) ListDeliveries(ctx context.Context, date UnixTime) ([]Delivery, error) {
+	rows, err := q.db.QueryContext(ctx, listDeliveries, date)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +216,7 @@ func (q *Queries) ListDeliveries(ctx context.Context) ([]Delivery, error) {
 const searchDeliveriesByName = `-- name: SearchDeliveriesByName :many
 SELECT id, date, schedule, location_type, location_name, created_at FROM deliveries
 WHERE location_name LIKE ?
-ORDER BY date
+ORDER BY date DESC
 `
 
 func (q *Queries) SearchDeliveriesByName(ctx context.Context, locationName string) ([]Delivery, error) {

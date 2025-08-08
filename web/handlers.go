@@ -16,12 +16,40 @@
 
 package web
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+
+	"git.cypr.io/oz/aguaxaca/app/db"
+)
 
 func (s *Server) RootHandler(w http.ResponseWriter, r *http.Request) {
-	err := s.templates.ExecuteTemplate(w, "index.html", nil)
+	// Create a queries object with the database connection
+	queries := db.New(s.app.DB)
+
+	// Fetch recent deliveries from the database
+	deliveries, err := queries.ListDeliveries(r.Context(), db.UnixTime{Time: startAt()})
+	if err != nil {
+		s.app.Logger.Error("failed to list deliveries", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Pass deliveries to the template
+	err = s.templates.ExecuteTemplate(w, "index.html", map[string]interface{}{
+		"Deliveries": deliveries,
+	})
 	if err != nil {
 		s.app.Logger.Error("failed to render template", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
+}
+
+// Compute the zone offset just once.
+var utcMinus6 = time.FixedZone("UTC-6", -6*60*60)
+
+// 7 days ago, in UTC-6.
+func startAt() time.Time {
+	now := time.Now().In(utcMinus6)
+	return now.AddDate(0, 0, -7)
 }
