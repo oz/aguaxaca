@@ -22,6 +22,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"text/template"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -38,12 +39,15 @@ const RequestTimeOut = 60
 const ShutdownGracePeriod = 10
 
 type Server struct {
-	app *app.App
+	app       *app.App
+	templates *template.Template
 }
 
 func NewServer(app *app.App) *Server {
+	tmpl := template.Must(template.ParseGlob("web/templates/*.html"))
 	return &Server{
-		app: app,
+		app:       app,
+		templates: tmpl,
 	}
 }
 
@@ -59,16 +63,18 @@ func (s *Server) NewHandler() http.Handler {
 	// Timeout requests after 60s
 	r.Use(middleware.Timeout(RequestTimeOut * time.Second))
 
-	r.Get("/", s.Root)
+	// Routes
+	r.Get("/", s.RootHandler)
 
 	return r
 }
 
+// Run starts an http.Server
 func (s *Server) Run() error {
 	s.app.Logger.Info("starting web server", "address", s.app.ListenAddr)
 	server := &http.Server{Addr: s.app.ListenAddr, Handler: s.NewHandler()}
 
-	// Ctrl-c
+	// Ctrl-c ...
 	serverCtx, serverStopCtx := context.WithCancel(s.app.Ctx)
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt)

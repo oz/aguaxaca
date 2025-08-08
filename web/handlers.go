@@ -18,6 +18,10 @@ package web
 
 import "net/http"
 
-func (s *Server) Root(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello, world!"))
+func (s *Server) RootHandler(w http.ResponseWriter, r *http.Request) {
+	err := s.templates.ExecuteTemplate(w, "index.html", nil)
+	if err != nil {
+		s.app.Logger.Error("failed to render template", "error", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+	}
 }
