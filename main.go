@@ -71,6 +71,7 @@ func main() {
 
 	// root command
 	rootFlagSet := flag.NewFlagSet("aguaxaca", flag.ExitOnError)
+	debug := rootFlagSet.Bool("debug", false, "log debug information")
 	root := &ffcli.Command{
 		Name:        "aguaxaca",
 		ShortUsage:  "aguaxaca [OPTIONS] SUBCOMMAND ...",
@@ -88,7 +89,7 @@ func main() {
 	}
 
 	// Configure default *App after flags parsing...
-	if err := app.Init(); err != nil {
+	if err := app.Init(*debug); err != nil {
 		fmt.Fprintf(os.Stderr, "App init error: %v\n", err)
 		os.Exit(2)
 	}
