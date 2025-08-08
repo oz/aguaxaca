@@ -8,9 +8,11 @@ WHERE "date" > ?
 ORDER BY "date" DESC;
 
 -- name: SearchDeliveriesByName :many
-SELECT * FROM deliveries
-WHERE location_name LIKE ?
-ORDER BY "date" DESC;
+SELECT d.*
+FROM deliveries d
+JOIN deliveries_fts fts ON d.id = fts.id
+WHERE fts.location_name MATCH ?
+ORDER BY d.date DESC;
 
 -- name: CreateDelivery :one
 INSERT INTO deliveries (

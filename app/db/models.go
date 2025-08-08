@@ -8,6 +8,11 @@ import (
 	"database/sql"
 )
 
+type DeliveriesFt struct {
+	ID           string `db:"id" json:"id"`
+	LocationName string `db:"location_name" json:"location_name"`
+}
+
 type Delivery struct {
 	ID           int64    `db:"id" json:"id"`
 	Date         UnixTime `db:"date" json:"date"`
