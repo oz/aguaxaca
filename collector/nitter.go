@@ -137,7 +137,7 @@ func (nc *NitterCollector) downloadImage(url string) (string, error) {
 func (nc *NitterCollector) getFirefoxCollector() *colly.Collector {
 	c := colly.NewCollector(
 		// Hiding in plain sight...
-		colly.UserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:140.0) Gecko/20100101 Firefox/140.0"),
+		colly.UserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:141.0) Gecko/20100101 Firefox/141.0"),
 
 		// Don't use that with a public Nitter instance.
 		colly.IgnoreRobotsTxt(),
