@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	_ "embed"
 	"fmt"
+	"log/slog"
 
 	_ "modernc.org/sqlite"
 )
@@ -29,14 +30,16 @@ import (
 var ddl string
 
 type App struct {
-	DB  *sql.DB
-	Ctx context.Context
+	DB     *sql.DB
+	Ctx    context.Context
+	Logger *slog.Logger
 }
 
 // NewApp builds the core App type.
 func NewApp(ctx context.Context) *App {
 	app := new(App)
 	app.Ctx = ctx
+	app.Logger = slog.Default()
 
 	return app
 }

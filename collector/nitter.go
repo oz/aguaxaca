@@ -19,7 +19,7 @@ package collector
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path"
 	"strings"
@@ -37,15 +37,17 @@ type NitterCollector struct {
 	BaseDomain  string
 	DownloadDir string
 	Account     string
+	log         *slog.Logger
 }
 
 // NewNitterCollector builds a default Nitter collector / scraper.
-func NewNitterCollector(account string) *NitterCollector {
+func NewNitterCollector(account string, logger *slog.Logger) *NitterCollector {
 	// TODO: make this configurable
 	return &NitterCollector{
 		BaseDomain:  defaultBaseDomain,
 		DownloadDir: defaultDownloadDir,
 		Account:     account,
+		log:         logger.With("collector", "nitter"),
 	}
 }
 
@@ -78,11 +80,11 @@ func (nc *NitterCollector) DownloadImages() ([]string, error) {
 
 		e.ForEach(".attachments a.still-image", func(i int, a *colly.HTMLElement) {
 			imgURL := nc.BaseDomain + a.Attr("href")
-			log.Printf("Found image at: \"%s\"\n", imgURL)
+			nc.log.Info("found image", "url", imgURL)
 
 			file, err := nc.downloadImage(imgURL)
 			if err != nil {
-				log.Printf("Error downloading \"%s\": %s\n", imgURL, err)
+				nc.log.Error("download error", "url", imgURL, "error", err)
 				return
 			}
 			files = append(files, file)
@@ -91,13 +93,13 @@ func (nc *NitterCollector) DownloadImages() ([]string, error) {
 
 	// Set error handler
 	c.OnError(func(r *colly.Response, err error) {
-		log.Printf("HTTP error %d for %s: %v\n", r.StatusCode, r.Request.URL, err)
+		nc.log.Error("HTTP error", "status", r.StatusCode, "url", r.Request.URL, "error", err)
 	})
 
 	c.Visit(nc.BaseDomain + "/" + nc.Account)
-	log.Println("HTML scraper: waiting for pending requests")
+	nc.log.Debug("waiting for pending requests")
 	c.Wait()
-	log.Println("HTML scraper: done.")
+	nc.log.Info("finished scraping")
 
 	return files, err
 }
@@ -109,17 +111,17 @@ func (nc *NitterCollector) downloadImage(url string) (string, error) {
 
 	// This check avoids an unnecessary copy from Colly's local cache.
 	if fileExists(dest) {
-		log.Printf("Skipped image: %s is in cache\n", url)
+		nc.log.Debug("image already cached", "url", url)
 		return dest, nil
 	}
-	log.Printf("Downloading %s to: %s\n", url, dest)
+	nc.log.Info("downloading", "url", url, "dest", dest)
 
 	c := nc.getFirefoxCollector()
 	c.OnResponse(func(r *colly.Response) {
 		if strings.Contains(r.Headers.Get("Content-Type"), "image") {
 			fileName := path.Base(r.Request.URL.Path)
 			if err := r.Save(dest); err != nil {
-				log.Printf("Error saving file %s: %s\n", fileName, err)
+				nc.log.Error("error saving file", "file", fileName, "error", err)
 			}
 		}
 	})
@@ -146,7 +148,7 @@ func (nc *NitterCollector) getFirefoxCollector() *colly.Collector {
 		colly.CacheDir("cache"),
 	)
 	c.OnRequest(func(r *colly.Request) {
-		log.Println("GET", r.URL)
+		nc.log.Debug("GET", "url", r.URL)
 		r.Headers.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 		r.Headers.Set("Accept-Encoding", "gzip, deflate, br, zstd")
 		r.Headers.Set("Accept-Language", "en-US,en;q=0.5")

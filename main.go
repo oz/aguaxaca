@@ -20,11 +20,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 
 	"git.cypr.io/oz/aguaxaca/app"
-	"git.cypr.io/oz/aguaxaca/collector"
 	"github.com/peterbourgon/ff/v3/ffcli"
 )
 
@@ -37,9 +35,9 @@ func main() {
 		Name:      "collect",
 		ShortHelp: "Fetch latest water schedules",
 		Exec: func(context.Context, []string) error {
-			c := app.NewCollector(collector.NewNitterCollector("SOAPA_Oax"))
-			if err := c.Collect(); err != nil {
-				log.Fatalf("Collector error: %v", err)
+			if err := app.DefaultCollector().Collect(); err != nil {
+				fmt.Printf("Error collecting schedules: %v\n", err)
+				os.Exit(2)
 			}
 
 			return nil
@@ -54,9 +52,9 @@ func main() {
 			analyzer := app.NewAnalyzer()
 			count, err := analyzer.ProcessPendingImports()
 			if err != nil {
-				log.Printf("Error analyzing images: %v", err)
+				fmt.Printf("Error analyzing images: %v", err)
 			}
-			fmt.Printf("Finished analyzing images (%d).\n", count)
+			fmt.Printf("Image analysis complete (%d).\n", count)
 			return nil
 		},
 	}
@@ -91,7 +89,8 @@ func main() {
 
 	// Configure default *App after flags parsing...
 	if err := app.Init(); err != nil {
-		log.Fatalf("could not initialize app: %v\n", err)
+		fmt.Fprintf(os.Stderr, "App init error: %v\n", err)
+		os.Exit(2)
 	}
 
 	if err := root.Run(ctx); err != nil {

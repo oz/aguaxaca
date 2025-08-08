@@ -19,7 +19,7 @@ package app
 import (
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/dchest/siphash"
@@ -37,12 +37,15 @@ var SipHashKey = [16]byte{
 type Collector struct {
 	collector collector.Collector
 	app       *App
+	log       *slog.Logger
 }
 
-func (app *App) NewCollector(collector collector.Collector) *Collector {
+func (app *App) DefaultCollector() *Collector {
+	nitter := collector.NewNitterCollector("SOAPA_Oax", app.Logger)
 	return &Collector{
 		app:       app,
-		collector: collector,
+		collector: nitter,
+		log:       app.Logger.With("collector", "nitter"),
 	}
 }
 
@@ -53,18 +56,18 @@ func (c *Collector) Collect() error {
 	if err != nil {
 		return fmt.Errorf("image download: %v", err)
 	}
-	log.Println("DEBUG: found images:", images)
+	c.log.Debug("importable images", "images", images)
 
 	// Create import jobs for each new image.
 	for _, path := range images {
 		fileHash, err := hashFile(path)
 		if err != nil {
-			log.Printf("Error hashing file %s: %v", path, err)
+			c.log.Error("hash error", "path", path, "error", err)
 			continue
 		}
 
 		if err := c.CreateImportIfNotExists(path, int64(fileHash)); err != nil {
-			log.Printf("Error importing %s: %v", path, err)
+			c.log.Error("import error", "path", path, "error", err)
 			continue
 		}
 	}
@@ -75,18 +78,18 @@ func (c *Collector) CreateImportIfNotExists(path string, hash int64) error {
 	queries := db.New(c.app.DB)
 	count, err := queries.CountImportsByHash(c.app.Ctx, hash)
 	if err != nil {
-		return fmt.Errorf("lookup import record for '%s': %v", path, err)
+		return fmt.Errorf("CountImportsByHash for '%s': %v", path, err)
 	}
 	if count != 0 {
-		log.Printf("skipping '%s': already imported (hash: %d)\n", path, hash)
+		c.log.Info("already collected (skipped)", "path", path)
 		return nil
 	}
 
 	imp, err := queries.CreateImport(c.app.Ctx, db.CreateImportParams{FilePath: path, FileHash: hash})
 	if err != nil {
-		return fmt.Errorf("create import record for '%s': %v", path, err)
+		return fmt.Errorf("CreateImport for '%s': %v", path, err)
 	}
-	log.Printf("Created new import job #%d for %s", imp.ID, imp.FilePath)
+	c.log.Info("new import job", "job", imp.ID, "path", imp.FilePath)
 
 	return nil
 }

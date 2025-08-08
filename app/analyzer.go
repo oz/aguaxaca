@@ -21,7 +21,7 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -37,49 +37,52 @@ const DateFormat = "2006-01-02"
 
 type Analyzer struct {
 	app *App
+	log *slog.Logger
 }
 
 func (app *App) NewAnalyzer() *Analyzer {
-	return &Analyzer{app: app}
+	return &Analyzer{
+		app: app,
+		log: app.Logger,
+	}
 }
 
-func (analyzer *Analyzer) ProcessPendingImports() (int, error) {
-	queries := db.New(analyzer.app.DB)
+func (a *Analyzer) ProcessPendingImports() (int, error) {
+	queries := db.New(a.app.DB)
 
 	runs := sql.NullInt64{Int64: MaxRuns, Valid: true}
-	imports, err := queries.GetPendingImports(analyzer.app.Ctx, runs)
+	imports, err := queries.GetPendingImports(a.app.Ctx, runs)
 	if err != nil {
 		return 0, err
 	}
 
 	imCount := 0
 	for _, im := range imports {
-		log.Printf("Analyzing import #%d: %s", im.ID, im.FilePath)
+		log := a.log.With("import", im.ID, "runs", im.Runs)
 
-		// Query Anthropic (seq)
-		csvData, err := parser.ParseFileWithPrompt(analyzer.app.Ctx, im.FilePath, parser.DefaultCSVPrompt)
+		log.Info("analyzing image")
+		csvData, err := parser.ParseFileWithPrompt(a.app.Ctx, im.FilePath, parser.DefaultCSVPrompt)
 		if err != nil {
-			log.Printf("Parser error for #%d: %v", im.ID, err)
+			log.Error("analyze error", "error", err.Error())
 
-			if dbErr := queries.FailImport(analyzer.app.Ctx, im.ID); dbErr != nil {
-				return imCount, fmt.Errorf("Error updating DB (FailImport) for #%d: %v", im.ID, dbErr)
+			if dbErr := queries.FailImport(a.app.Ctx, im.ID); dbErr != nil {
+				return imCount, fmt.Errorf("FailImport error for #%d: %v", im.ID, dbErr)
 			}
 			continue
 		}
-		log.Printf("Parsed image #%d", im.ID)
 
-		// Import csv data
-		if err := analyzer.ImportData(&im, csvData); err != nil {
-			log.Printf("Parser error for #%d: %v", im.ID, err)
+		log.Debug("importing data")
+		if err := a.ImportData(&im, csvData); err != nil {
+			log.Error("parser error", "error", err)
 
-			if dbErr := queries.FailImport(analyzer.app.Ctx, im.ID); dbErr != nil {
-				return imCount, fmt.Errorf("Error updating DB (FailImport) for #%d: %v", im.ID, dbErr)
+			if dbErr := queries.FailImport(a.app.Ctx, im.ID); dbErr != nil {
+				return imCount, fmt.Errorf("FailImport error for #%d: %v", im.ID, dbErr)
 			}
 			continue
 		}
 
 		// Update import state
-		if err := queries.CompleteImport(analyzer.app.Ctx, im.ID); err != nil {
+		if err := queries.CompleteImport(a.app.Ctx, im.ID); err != nil {
 			return imCount, fmt.Errorf("Error updating DB (CompleteImport) for #%d: %v", im.ID, err)
 		}
 		imCount += 1
@@ -88,10 +91,10 @@ func (analyzer *Analyzer) ProcessPendingImports() (int, error) {
 	return imCount, nil
 }
 
-func (analyzer *Analyzer) ImportData(im *db.Import, csvData string) error {
-	log.Printf("DEBUG CSV data for #%d:\n%s\n\n", im.ID, csvData)
+func (a *Analyzer) ImportData(im *db.Import, csvData string) error {
+	a.log.Debug("CSV data", "import", im.ID, "csv", csvData)
 
-	queries := db.New(analyzer.app.DB)
+	queries := db.New(a.app.DB)
 	reader := csv.NewReader(strings.NewReader(csvData))
 
 	// Read header row
@@ -115,7 +118,7 @@ func (analyzer *Analyzer) ImportData(im *db.Import, csvData string) error {
 		}
 
 		// Create delivery record with lowercase location_type
-		_, err = queries.CreateDelivery(analyzer.app.Ctx, db.CreateDeliveryParams{
+		_, err = queries.CreateDelivery(a.app.Ctx, db.CreateDeliveryParams{
 			Date:         db.UnixTime{Time: date},
 			Schedule:     strings.ToLower(record[1]),
 			LocationType: strings.ToLower(record[2]), // Ensure lowercase
