@@ -24,19 +24,18 @@ import (
 )
 
 func (s *Server) RootHandler(w http.ResponseWriter, r *http.Request) {
-	// Create a queries object with the database connection
+	// Load deliveries
 	queries := db.New(s.app.DB)
-
-	// Fetch recent deliveries from the database
-	deliveries, err := queries.ListDeliveries(r.Context(), db.UnixTime{Time: startAt()})
+	fromDate := db.UnixTime{Time: daysAgo(7)}
+	deliveries, err := queries.ListDeliveries(r.Context(), fromDate)
 	if err != nil {
 		s.app.Logger.Error("failed to list deliveries", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
-	// Pass deliveries to the template
-	err = s.templates.ExecuteTemplate(w, "index.html", map[string]interface{}{
+	// Render HTML.
+	err = s.templates.ExecuteTemplate(w, "index.html", map[string]any{
 		"Deliveries": deliveries,
 	})
 	if err != nil {
@@ -49,7 +48,7 @@ func (s *Server) RootHandler(w http.ResponseWriter, r *http.Request) {
 var utcMinus6 = time.FixedZone("UTC-6", -6*60*60)
 
 // 7 days ago, in UTC-6.
-func startAt() time.Time {
+func daysAgo(n int) time.Time {
 	now := time.Now().In(utcMinus6)
-	return now.AddDate(0, 0, -7)
+	return now.AddDate(0, 0, -n)
 }

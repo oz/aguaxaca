@@ -1,0 +1,80 @@
+{{define "layout"}}
+<!doctype html>
+<html lang="es">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>
+            {{block "title" .}}Aguaxaca - Información sobre distribución de agua
+            en Oaxaca{{end}}
+        </title>
+        <style>
+            body {
+                font-family:
+                    system-ui,
+                    -apple-system,
+                    BlinkMacSystemFont,
+                    sans-serif;
+                line-height: 1.6;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 1rem;
+            }
+            h1 {
+                color: #0066cc;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin: 20px 0;
+            }
+            th, td {
+                padding: 8px 12px;
+                text-align: left;
+                border-bottom: 1px solid #ddd;
+            }
+            th {
+                background-color: #f2f2f2;
+            }
+            tr:hover {
+                background-color: #f5f5f5;
+            }
+
+            /* Responsive styles for mobile */
+            @media (max-width: 768px) {
+                /* Hide the 4th column (location name) on mobile */
+                th:nth-child(4),
+                td:nth-child(4) {
+                    display: none;
+                }
+            }
+
+            {{block "additionalStyles" .}}{{end}}
+        </style>
+    </head>
+    <body>
+        <header>
+            <h1>Aguaxaca🚰</h1>
+        </header>
+        <main>
+            {{block "content" .}}
+            <p>Vuelva pronto.</p>
+            {{end}}
+        </main>
+        <footer>
+            {{block "footer" .}}
+            <p
+                style="
+                    text-align: center;
+                    font-size: 0.8em;
+                    margin-top: 2em;
+                    color: #666;
+                "
+            >
+                © 2025 Aguaxaca
+            </p>
+            {{end}}
+        </footer>
+    </body>
+</html>
+{{end}}

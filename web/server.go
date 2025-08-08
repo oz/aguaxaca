@@ -44,7 +44,12 @@ type Server struct {
 }
 
 func NewServer(app *app.App) *Server {
-	tmpl := template.Must(template.ParseGlob("web/templates/*.html"))
+	tmpl := template.Must(
+		template.ParseFiles(
+			"web/templates/layout.html",
+			"web/templates/index.html",
+		),
+	)
 	return &Server{
 		app:       app,
 		templates: tmpl,
