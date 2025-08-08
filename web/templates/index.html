@@ -15,18 +15,18 @@
         <thead>
             <tr>
                 <th>Fecha</th>
+                <th>Ubicación</th>
                 <th>Horario</th>
                 <th>Tipo de Ubicación</th>
-                <th>Nombre de Ubicación</th>
             </tr>
         </thead>
         <tbody>
             {{range .Deliveries}}
             <tr>
                 <td>{{.Date.Time.Format "02/01/2006"}}</td>
+                <td>{{.LocationName}}</td>
                 <td>{{.Schedule}}</td>
                 <td>{{.LocationType}}</td>
-                <td>{{.LocationName}}</td>
             </tr>
             {{else}}
             <tr>
