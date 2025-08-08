@@ -16,29 +16,13 @@
 
 package web
 
-import (
-	"net/http"
+import "time"
 
-	"git.cypr.io/oz/aguaxaca/app/db"
-)
+// Let's compute Oaxaca's zone offset just once.
+var utcMinus6 = time.FixedZone("UTC-6", -6*60*60)
 
-func (s *Server) RootHandler(w http.ResponseWriter, r *http.Request) {
-	// Load deliveries
-	queries := db.New(s.app.DB)
-	fromDate := db.UnixTime{Time: daysAgo(7)}
-	deliveries, err := queries.ListDeliveries(r.Context(), fromDate)
-	if err != nil {
-		s.app.Logger.Error("failed to list deliveries", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	// Render HTML.
-	err = s.templates.ExecuteTemplate(w, "index.html", map[string]any{
-		"Deliveries": deliveries,
-	})
-	if err != nil {
-		s.app.Logger.Error("failed to render template", "error", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-	}
+// N days ago, in UTC-6.
+func daysAgo(n int) time.Time {
+	now := time.Now().In(utcMinus6)
+	return now.AddDate(0, 0, -n)
 }
