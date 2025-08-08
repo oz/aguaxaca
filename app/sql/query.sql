@@ -4,13 +4,13 @@ WHERE id = ? LIMIT 1;
 
 -- name: ListDeliveries :many
 SELECT * FROM deliveries
-WHERE date > ?
-ORDER BY date DESC;
+WHERE "date" > ?
+ORDER BY "date" DESC;
 
 -- name: SearchDeliveriesByName :many
 SELECT * FROM deliveries
 WHERE location_name LIKE ?
-ORDER BY date DESC;
+ORDER BY "date" DESC;
 
 -- name: CreateDelivery :one
 INSERT INTO deliveries (
