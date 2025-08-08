@@ -72,6 +72,7 @@ func main() {
 	// root command
 	rootFlagSet := flag.NewFlagSet("aguaxaca", flag.ExitOnError)
 	debug := rootFlagSet.Bool("debug", false, "log debug information")
+	listenAddr = fs.String("listen", "localhost:8080", "listen address")
 	root := &ffcli.Command{
 		Name:        "aguaxaca",
 		ShortUsage:  "aguaxaca [OPTIONS] SUBCOMMAND ...",

@@ -47,7 +47,7 @@ func NewApp(ctx context.Context) *App {
 
 // Init starts the app: connect DB handles, etc.
 func (app *App) Init(debug bool) error {
-	// Create a new text logger for debug-mode
+	// debug mode: use a new text slog logger
 	if debug {
 		opts := &slog.HandlerOptions{Level: slog.LevelDebug}
 		app.Logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
