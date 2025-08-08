@@ -23,6 +23,7 @@ import (
 	"os"
 
 	"git.cypr.io/oz/aguaxaca/app"
+	"git.cypr.io/oz/aguaxaca/web"
 	"github.com/peterbourgon/ff/v3/ffcli"
 )
 
@@ -64,15 +65,15 @@ func main() {
 		Name:      "server",
 		ShortHelp: "Start web server",
 		Exec: func(context.Context, []string) error {
-			fmt.Println("start web server")
-			return nil
+			server := web.NewServer(app)
+			return server.Run()
 		},
 	}
 
 	// root command
 	rootFlagSet := flag.NewFlagSet("aguaxaca", flag.ExitOnError)
 	debug := rootFlagSet.Bool("debug", false, "log debug information")
-	listenAddr = fs.String("listen", "localhost:8080", "listen address")
+	listenAddr := rootFlagSet.String("listen", "localhost:8080", "listen address")
 	root := &ffcli.Command{
 		Name:        "aguaxaca",
 		ShortUsage:  "aguaxaca [OPTIONS] SUBCOMMAND ...",
@@ -89,8 +90,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Configure default *App after flags parsing...
-	if err := app.Init(*debug); err != nil {
+	// Configure App after flags parsing.
+	if err := app.Init(*debug, *listenAddr); err != nil {
 		fmt.Fprintf(os.Stderr, "App init error: %v\n", err)
 		os.Exit(2)
 	}

@@ -4,6 +4,8 @@ go 1.24.1
 
 require (
 	github.com/anthropics/anthropic-sdk-go v1.6.2
+	github.com/dchest/siphash v1.2.3
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/gocolly/colly/v2 v2.2.0
 	github.com/peterbourgon/ff/v3 v3.4.0
 	modernc.org/sqlite v1.38.0
@@ -16,8 +18,8 @@ require (
 	github.com/antchfx/xmlquery v1.4.4 // indirect
 	github.com/antchfx/xpath v1.3.4 // indirect
 	github.com/bits-and-blooms/bitset v1.22.0 // indirect
-	github.com/dchest/siphash v1.2.3 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/go-chi/httplog/v3 v3.2.2 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect

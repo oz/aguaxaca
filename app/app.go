@@ -31,9 +31,11 @@ import (
 var ddl string
 
 type App struct {
-	DB     *sql.DB
-	Ctx    context.Context
-	Logger *slog.Logger
+	DB         *sql.DB
+	Ctx        context.Context
+	Logger     *slog.Logger
+	ListenAddr string
+	Debug      bool
 }
 
 // NewApp builds the core App type.
@@ -41,17 +43,22 @@ func NewApp(ctx context.Context) *App {
 	app := new(App)
 	app.Ctx = ctx
 	app.Logger = slog.Default()
+	app.Debug = false
 
 	return app
 }
 
 // Init starts the app: connect DB handles, etc.
-func (app *App) Init(debug bool) error {
-	// debug mode: use a new text slog logger
+func (app *App) Init(debug bool, listenAddr string) error {
+	app.ListenAddr = listenAddr
+	app.Debug = debug
+
+	// debug mode: use a new logger with lower level.
 	if debug {
 		opts := &slog.HandlerOptions{Level: slog.LevelDebug}
 		app.Logger = slog.New(slog.NewTextHandler(os.Stdout, opts))
 	}
+
 	return app.InitDB()
 }
 
