@@ -2,12 +2,13 @@
 
 {{define "content"}}
     <p>
-        Aguaxaca es un proyecto ciudadano para hacer más accesible la información
-        sobre distribución de agua en Oaxaca.
-    </p>
-    <p>
+        ℹ️ Aguaxaca es un proyecto ciudadano para hacer más accesible la información
+        pública sobre distribución de agua en Oaxaca.
         Para datos siempre actualizados, consulta
         <a href="https://x.com/SOAPA_Oax">@SOAPA_Oax</a>.
+    </p>
+    <p>
+      📩 Ayuda, y más información <a href="mailto:oz@cypr.io">por correo electronico</a>.
     </p>
 
     <h2>Últimas Entregas de Agua</h2>
@@ -24,7 +25,7 @@
             {{range .Deliveries}}
             <tr>
                 <td>{{.Date.Time.Format "02/01/2006"}}</td>
-                <td>{{.LocationName}}</td>
+                <td><a href="/?name={{.LocationName | urlquery }}">{{.LocationName}}</a></td>
                 <td>{{.Schedule}}</td>
                 <td>{{.LocationType}}</td>
             </tr>

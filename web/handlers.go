@@ -17,16 +17,17 @@
 package web
 
 import (
+	"database/sql"
 	"net/http"
+	"strings"
 
 	"git.cypr.io/oz/aguaxaca/app/db"
 )
 
 func (s *Server) RootHandler(w http.ResponseWriter, r *http.Request) {
-	// Load deliveries
-	queries := db.New(s.app.DB)
-	fromDate := db.UnixTime{Time: daysAgo(7)}
-	deliveries, err := queries.ListDeliveries(r.Context(), fromDate)
+	search := queryParamToFTS(r.URL.Query().Get("name"))
+	s.app.Logger.Info("Search for:", "search", search)
+	deliveries, err := findDeliveries(r, s.app.DB, search)
 	if err != nil {
 		s.app.Logger.Error("failed to list deliveries", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -41,4 +42,37 @@ func (s *Server) RootHandler(w http.ResponseWriter, r *http.Request) {
 		s.app.Logger.Error("failed to render template", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
+}
+
+// findDeliveries for the home: either the latest, or FTS on name.
+func findDeliveries(r *http.Request, conn *sql.DB, nameSearch string) ([]db.Delivery, error) {
+	queries := db.New(conn)
+	if nameSearch == "" {
+		fromDate := db.UnixTime{Time: daysAgo(7)}
+		return queries.ListDeliveries(r.Context(), fromDate)
+	}
+
+	return queries.SearchDeliveriesByName(r.Context(), nameSearch)
+}
+
+// Basic search query param cleanup.
+func queryParamToFTS(param string) string {
+	trimmed := strings.ToLower(strings.TrimSpace(param))
+	if trimmed == "" {
+		return ""
+	}
+
+	// Not all special pragmas are quoted here, but a few to prevent bugs.
+
+	// Double-quotes: '"test"' -> '""test""'
+	trimmed = strings.ReplaceAll(trimmed, `"`, `""`)
+
+	// Parenthesis are used for query grouping in FTS5.
+	trimmed = strings.ReplaceAll(trimmed, "(", `"("`)
+	trimmed = strings.ReplaceAll(trimmed, ")", `")"`)
+
+	// TODO:
+	// - remove star matches like: prefix*
+	// - remove AND/OR/NOT keywords
+	return trimmed
 }

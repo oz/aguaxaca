@@ -214,9 +214,12 @@ func (q *Queries) ListDeliveries(ctx context.Context, date UnixTime) ([]Delivery
 }
 
 const searchDeliveriesByName = `-- name: SearchDeliveriesByName :many
-SELECT id, date, schedule, location_type, location_name, created_at FROM deliveries
-WHERE location_name LIKE ?
-ORDER BY "date" DESC
+SELECT d.id, d.date, d.schedule, d.location_type, d.location_name, d.created_at
+FROM deliveries d
+JOIN deliveries_fts fts ON d.id = fts.id
+WHERE fts.location_name MATCH ?
+GROUP BY d.id
+ORDER BY d.date DESC
 `
 
 func (q *Queries) SearchDeliveriesByName(ctx context.Context, locationName string) ([]Delivery, error) {
