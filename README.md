@@ -57,8 +57,8 @@ Other improvements to explore:
 
 - [x] if an image is already on the local cache do not "return" it.
 - [ ] cleanup: we'll want to delete images after a couple of weeks or
-      so. We could get by with 24h cache, but let's play it safe in case
-      we want to debug stuff.
+      so. We could get by with 24h cache, in theory, but that is a very
+      short notice to start debugging issues.
 
 
 ## Text parsing
@@ -114,16 +114,16 @@ It would be nice to search and match names like "América" if we type
 "amér" or even "ame": ignoring case, and accentuated characters, but
 we could need more than the basic Sqlite at that point. See below:
 
-- [ ] Check Sqlite's "FTS" module, and create/update triggers.
+- [x] Check Sqlite's "FTS" module, and create/update triggers.
 - [ ] Backup with litestream.
 
 ## Web
 
-1. Use a small router (e.g. Chi?) to serve the data as JSON, or
+1. [x] Use a small router (e.g. Chi?) to serve the data as JSON, or
    plain HTML, with some HTMX JS sprinkled on top, or both...
-2. Build a *light* front-end anyway, mobile first.
-3. Cache all the things.
-4. Track stuff with a prometheus endpoint, for fun.
+2. [/] Build a *light* front-end anyway, mobile first.
+3. [ ] Cache all the things.
+4. [ ]Track stuff with a prometheus endpoint, for fun.
 
 Some ideas for the routes.
 
