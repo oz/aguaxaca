@@ -64,11 +64,14 @@ func queryParamToFTS(param string) string {
 	}
 
 	// Quote some FTS5 search tokens that break too easily.
-	// Double-quotes: '"test"' -> '""test""'
-	trimmed = strings.ReplaceAll(trimmed, `"`, `""`)
-	// Parenthesis are used for query grouping in FTS5.
-	trimmed = strings.ReplaceAll(trimmed, "(", `"("`)
-	trimmed = strings.ReplaceAll(trimmed, ")", `")"`)
+	// See https://www.sqlite.org/fts5.html
+	r := strings.NewReplacer(
+		`"`, `""`,
+		"(", `"("`,
+		")", `")"`,
+		",", "",
+	)
+	trimmed = r.Replace(trimmed)
 
 	// TODO: remove wildcard matches, like "prefix*": they will become too
 	//       slow as the DB grows.
