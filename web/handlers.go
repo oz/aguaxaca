@@ -26,8 +26,8 @@ import (
 )
 
 func (s *Server) RootHandler(w http.ResponseWriter, r *http.Request) {
-	search := queryParamToFTS(r.URL.Query().Get("name"))
-	deliveries, err := findDeliveries(r, s.app.DB, search)
+	nameParam := r.URL.Query().Get("name")
+	deliveries, err := findDeliveries(r, s.app.DB, queryParamToFTS(nameParam))
 	if err != nil {
 		s.app.Logger.Error("failed to list deliveries", "error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
@@ -37,7 +37,7 @@ func (s *Server) RootHandler(w http.ResponseWriter, r *http.Request) {
 	// Render HTML.
 	err = s.templates.ExecuteTemplate(w, "index.html", map[string]any{
 		"Deliveries": deliveries,
-		"Name":       html.EscapeString(search),
+		"Name":       html.EscapeString(nameParam),
 	})
 	if err != nil {
 		s.app.Logger.Error("failed to render template", "error", err)
@@ -63,17 +63,14 @@ func queryParamToFTS(param string) string {
 		return ""
 	}
 
-	// Not all special pragmas are quoted here, but a few to prevent bugs.
-
+	// Quote some FTS5 search tokens that break too easily.
 	// Double-quotes: '"test"' -> '""test""'
 	trimmed = strings.ReplaceAll(trimmed, `"`, `""`)
-
 	// Parenthesis are used for query grouping in FTS5.
 	trimmed = strings.ReplaceAll(trimmed, "(", `"("`)
 	trimmed = strings.ReplaceAll(trimmed, ")", `")"`)
 
-	// TODO:
-	// - remove star matches like: prefix*
-	// - remove AND/OR/NOT keywords
+	// TODO: remove wildcard matches, like "prefix*": they will become too
+	//       slow as the DB grows.
 	return trimmed
 }
