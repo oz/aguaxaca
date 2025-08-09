@@ -217,13 +217,19 @@ const searchDeliveriesByName = `-- name: SearchDeliveriesByName :many
 SELECT d.id, d.date, d.schedule, d.location_type, d.location_name, d.created_at
 FROM deliveries d
 JOIN deliveries_fts fts ON d.id = fts.id
-WHERE fts.location_name MATCH ?
+WHERE d.date > ?
+  AND fts.location_name MATCH ?
 GROUP BY d.id
 ORDER BY d.date DESC
 `
 
-func (q *Queries) SearchDeliveriesByName(ctx context.Context, locationName string) ([]Delivery, error) {
-	rows, err := q.db.QueryContext(ctx, searchDeliveriesByName, locationName)
+type SearchDeliveriesByNameParams struct {
+	Date         UnixTime `db:"date" json:"date"`
+	LocationName string   `db:"location_name" json:"location_name"`
+}
+
+func (q *Queries) SearchDeliveriesByName(ctx context.Context, arg SearchDeliveriesByNameParams) ([]Delivery, error) {
+	rows, err := q.db.QueryContext(ctx, searchDeliveriesByName, arg.Date, arg.LocationName)
 	if err != nil {
 		return nil, err
 	}

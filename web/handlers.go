@@ -53,7 +53,11 @@ func findDeliveries(r *http.Request, conn *sql.DB, nameSearch string) ([]db.Deli
 		return queries.ListDeliveries(r.Context(), fromDate)
 	}
 
-	return queries.SearchDeliveriesByName(r.Context(), nameSearch)
+	params := db.SearchDeliveriesByNameParams{
+		LocationName: nameSearch,
+		Date:         db.UnixTime{Time: daysAgo(90)},
+	}
+	return queries.SearchDeliveriesByName(r.Context(), params)
 }
 
 // Basic search query param cleanup.

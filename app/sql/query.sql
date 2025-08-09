@@ -11,7 +11,8 @@ ORDER BY "date" DESC;
 SELECT d.*
 FROM deliveries d
 JOIN deliveries_fts fts ON d.id = fts.id
-WHERE fts.location_name MATCH ?
+WHERE d.date > ?
+  AND fts.location_name MATCH ?
 GROUP BY d.id
 ORDER BY d.date DESC;
 
