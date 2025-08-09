@@ -1,59 +1,71 @@
 {{define "title"}}Aguaxaca - Información sobre distribución de agua en Oaxaca{{end}}
 
 {{define "content"}}
-<p>
-    ℹ️ Aguaxaca es un proyecto ciudadano para hacer más accesible la información
-    pública sobre distribución de agua en Oaxaca. Para datos siempre
-    actualizados, consulta
-    <a href="https://x.com/SOAPA_Oax">@SOAPA_Oax</a>.
-</p>
-<p>
-    📩 Ayuda, y más información
-    <a href="mailto:oz@cypr.io">por correo electronico</a>.
-</p>
+<div class="tab-container">
+  <input class="tab-radio" type="radio" id="one" name="group"{{ if .Name }}{{ else }} checked{{ end }}/>
+  <input class="tab-radio" type="radio" id="two" name="group"{{ if .Name }} checked{{ else }}{{ end }}/>
+  <div class="tabs">
+    <label class="tab" id="one-tab" for="one">❓ Ayuda</label>
+    <label class="tab" id="two-tab" for="two">🔎 Buscar</label>
+  </div>
+  <div class="panels">
+    <div class="panel" id="one-panel">
+      <p>
+        Aguaxaca es un proyecto ciudadano independiente para hacer más
+        accesible la información pública sobre distribución de agua
+        en Oaxaca. Para datos siempre actualizados, consulta
+        <a href="https://x.com/SOAPA_Oax">@SOAPA_Oax</a>.
+      </p>
+      <p>
+        📩 Ayuda, y más información
+        <a href="mailto:oz@cypr.io">por correo electronico</a>.
+      </p>
+    </div>
+    <div class="panel" id="two-panel">
+      <form method="GET" action="/" style="margin-top: 1rem">
+          <input
+              type="text"
+              name="name"
+              placeholder="Buscar por nombre"
+              value="{{.Name}}"
+              style="padding: 0.5rem; width: 40%"
+          />
+          <button type="submit" style="padding: 0.5rem">Buscar</button>
+      </form>
+    </div>
+  </div>
+</div>
 
 {{ if .Name }}
   <h2>Últimas Entregas en: {{ .Name }}</h2>
 {{ else }}
   <h2>Últimas Entregas de Agua</h2>
 {{ end }}
-<form method="GET" action="/" style="margin-top: 1rem">
-    <input
-        type="text"
-        name="name"
-        placeholder="Buscar por nombre"
-        value="{{.Name}}"
-        style="padding: 0.5rem; width: 40%"
-    />
-    <button type="submit" style="padding: 0.5rem">Buscar</button>
-</form>
 <table>
-    <thead>
-        <tr>
-            <th>Fecha</th>
-            <th>Ubicación</th>
-            <th>Horario</th>
-            <th>Tipo de Ubicación</th>
-        </tr>
-    </thead>
-    <tbody>
-        {{range .Deliveries}}
-        <tr>
-            <td>{{.Date.Time.Format "02/01/2006"}}</td>
-            <td>
-                <a href="/?name={{.LocationName | urlquery }}"
-                    >{{.LocationName}}</a
-                >
-            </td>
-            <td>{{.Schedule}}</td>
-            <td>{{.LocationType}}</td>
-        </tr>
-        {{else}}
-        <tr>
-            <td colspan="4">No hay entregas disponibles.</td>
-        </tr>
-        {{end}}
-    </tbody>
+  <thead>
+    <tr>
+      <th>Fecha</th>
+      <th>Ubicación</th>
+      <th>Horario</th>
+      <th>Tipo de Ubicación</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Deliveries}}
+    <tr>
+      <td>{{.Date.Time.Format "02/01/2006"}}</td>
+      <td>
+        <a href="/?name={{.LocationName | urlquery }}">{{.LocationName}}</a>
+      </td>
+      <td>{{.Schedule}}</td>
+      <td>{{.LocationType}}</td>
+    </tr>
+    {{else}}
+    <tr>
+      <td colspan="4">No se encontraron entregas.</td>
+    </tr>
+    {{end}}
+  </tbody>
 </table>
 {{end}}
 
