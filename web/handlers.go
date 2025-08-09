@@ -18,6 +18,7 @@ package web
 
 import (
 	"database/sql"
+	"html"
 	"net/http"
 	"strings"
 
@@ -26,7 +27,6 @@ import (
 
 func (s *Server) RootHandler(w http.ResponseWriter, r *http.Request) {
 	search := queryParamToFTS(r.URL.Query().Get("name"))
-	s.app.Logger.Info("Search for:", "search", search)
 	deliveries, err := findDeliveries(r, s.app.DB, search)
 	if err != nil {
 		s.app.Logger.Error("failed to list deliveries", "error", err)
@@ -37,6 +37,7 @@ func (s *Server) RootHandler(w http.ResponseWriter, r *http.Request) {
 	// Render HTML.
 	err = s.templates.ExecuteTemplate(w, "index.html", map[string]any{
 		"Deliveries": deliveries,
+		"Name":       html.EscapeString(search),
 	})
 	if err != nil {
 		s.app.Logger.Error("failed to render template", "error", err)

@@ -1,41 +1,60 @@
 {{define "title"}}Aguaxaca - Información sobre distribución de agua en Oaxaca{{end}}
 
 {{define "content"}}
-    <p>
-        ℹ️ Aguaxaca es un proyecto ciudadano para hacer más accesible la información
-        pública sobre distribución de agua en Oaxaca.
-        Para datos siempre actualizados, consulta
-        <a href="https://x.com/SOAPA_Oax">@SOAPA_Oax</a>.
-    </p>
-    <p>
-      📩 Ayuda, y más información <a href="mailto:oz@cypr.io">por correo electronico</a>.
-    </p>
+<p>
+    ℹ️ Aguaxaca es un proyecto ciudadano para hacer más accesible la información
+    pública sobre distribución de agua en Oaxaca. Para datos siempre
+    actualizados, consulta
+    <a href="https://x.com/SOAPA_Oax">@SOAPA_Oax</a>.
+</p>
+<p>
+    📩 Ayuda, y más información
+    <a href="mailto:oz@cypr.io">por correo electronico</a>.
+</p>
 
-    <h2>Últimas Entregas de Agua</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Fecha</th>
-                <th>Ubicación</th>
-                <th>Horario</th>
-                <th>Tipo de Ubicación</th>
-            </tr>
-        </thead>
-        <tbody>
-            {{range .Deliveries}}
-            <tr>
-                <td>{{.Date.Time.Format "02/01/2006"}}</td>
-                <td><a href="/?name={{.LocationName | urlquery }}">{{.LocationName}}</a></td>
-                <td>{{.Schedule}}</td>
-                <td>{{.LocationType}}</td>
-            </tr>
-            {{else}}
-            <tr>
-                <td colspan="4">No hay entregas disponibles.</td>
-            </tr>
-            {{end}}
-        </tbody>
-    </table>
+{{ if .Name }}
+  <h2>Últimas Entregas en: {{ .Name }}</h2>
+{{ else }}
+  <h2>Últimas Entregas de Agua</h2>
+{{ end }}
+<form method="GET" action="/" style="margin-top: 1rem">
+    <input
+        type="text"
+        name="name"
+        placeholder="Buscar por nombre"
+        value="{{.Name}}"
+        style="padding: 0.5rem; width: 40%"
+    />
+    <button type="submit" style="padding: 0.5rem">Buscar</button>
+</form>
+<table>
+    <thead>
+        <tr>
+            <th>Fecha</th>
+            <th>Ubicación</th>
+            <th>Horario</th>
+            <th>Tipo de Ubicación</th>
+        </tr>
+    </thead>
+    <tbody>
+        {{range .Deliveries}}
+        <tr>
+            <td>{{.Date.Time.Format "02/01/2006"}}</td>
+            <td>
+                <a href="/?name={{.LocationName | urlquery }}"
+                    >{{.LocationName}}</a
+                >
+            </td>
+            <td>{{.Schedule}}</td>
+            <td>{{.LocationType}}</td>
+        </tr>
+        {{else}}
+        <tr>
+            <td colspan="4">No hay entregas disponibles.</td>
+        </tr>
+        {{end}}
+    </tbody>
+</table>
 {{end}}
 
 {{define "index.html"}}
