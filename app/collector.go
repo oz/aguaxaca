@@ -41,7 +41,17 @@ type Collector struct {
 }
 
 func (app *App) DefaultCollector() *Collector {
-	nitter := collector.NewNitterCollector("SOAPA_Oax", app.Logger)
+	account := os.Getenv("NITTER_ACCOUNT")
+	if account == "" {
+		account = "SOAPA_Oax"
+	}
+	nitter := collector.NewNitterCollector(account)
+
+	if nitterHost := os.Getenv("NITTER_HOST"); nitterHost != "" {
+		nitter.BaseDomain = nitterHost
+	}
+	nitter.Log = app.Logger
+
 	return &Collector{
 		app:       app,
 		collector: nitter,

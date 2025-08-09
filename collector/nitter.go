@@ -27,27 +27,26 @@ import (
 	"github.com/gocolly/colly/v2"
 )
 
-// defaultBaseDomain is the Nitter instance where we scrape tweets.
-const defaultBaseDomain = "https://nitter.net"
+// DefaultBaseDomain is the Nitter instance where we scrape tweets.
+const DefaultBaseDomain = "https://nitter.net"
 
 // defaultDownloadDir is where images will be saved.
-const defaultDownloadDir = "./images"
+const DefaultDownloadDir = "./images"
 
 type NitterCollector struct {
 	BaseDomain  string
 	DownloadDir string
 	Account     string
-	log         *slog.Logger
+	Log         *slog.Logger
 }
 
 // NewNitterCollector builds a default Nitter collector / scraper.
-func NewNitterCollector(account string, logger *slog.Logger) *NitterCollector {
-	// TODO: make this configurable
+func NewNitterCollector(account string) *NitterCollector {
 	return &NitterCollector{
-		BaseDomain:  defaultBaseDomain,
-		DownloadDir: defaultDownloadDir,
 		Account:     account,
-		log:         logger.With("collector", "nitter"),
+		BaseDomain:  DefaultBaseDomain,
+		DownloadDir: DefaultDownloadDir,
+		Log:         slog.Default(),
 	}
 }
 
@@ -80,11 +79,11 @@ func (nc *NitterCollector) DownloadImages() ([]string, error) {
 
 		e.ForEach(".attachments a.still-image", func(i int, a *colly.HTMLElement) {
 			imgURL := nc.BaseDomain + a.Attr("href")
-			nc.log.Info("found image", "url", imgURL)
+			nc.Log.Info("found image", "url", imgURL)
 
 			file, err := nc.downloadImage(imgURL)
 			if err != nil {
-				nc.log.Error("download error", "url", imgURL, "error", err)
+				nc.Log.Error("download error", "url", imgURL, "error", err)
 				return
 			}
 			files = append(files, file)
@@ -93,13 +92,13 @@ func (nc *NitterCollector) DownloadImages() ([]string, error) {
 
 	// Set error handler
 	c.OnError(func(r *colly.Response, err error) {
-		nc.log.Error("HTTP error", "status", r.StatusCode, "url", r.Request.URL, "error", err)
+		nc.Log.Error("HTTP error", "status", r.StatusCode, "url", r.Request.URL, "error", err)
 	})
 
 	c.Visit(nc.BaseDomain + "/" + nc.Account)
-	nc.log.Debug("waiting for pending requests")
+	nc.Log.Debug("waiting for pending requests")
 	c.Wait()
-	nc.log.Info("finished scraping")
+	nc.Log.Info("finished scraping")
 
 	return files, err
 }
@@ -111,17 +110,17 @@ func (nc *NitterCollector) downloadImage(url string) (string, error) {
 
 	// This check avoids an unnecessary copy from Colly's local cache.
 	if fileExists(dest) {
-		nc.log.Debug("image already cached", "url", url)
+		nc.Log.Debug("image already cached", "url", url)
 		return dest, nil
 	}
-	nc.log.Info("downloading", "url", url, "dest", dest)
+	nc.Log.Info("downloading", "url", url, "dest", dest)
 
 	c := nc.getFirefoxCollector()
 	c.OnResponse(func(r *colly.Response) {
 		if strings.Contains(r.Headers.Get("Content-Type"), "image") {
 			fileName := path.Base(r.Request.URL.Path)
 			if err := r.Save(dest); err != nil {
-				nc.log.Error("error saving file", "file", fileName, "error", err)
+				nc.Log.Error("error saving file", "file", fileName, "error", err)
 			}
 		}
 	})
@@ -148,7 +147,7 @@ func (nc *NitterCollector) getFirefoxCollector() *colly.Collector {
 		colly.CacheDir("cache"),
 	)
 	c.OnRequest(func(r *colly.Request) {
-		nc.log.Debug("GET", "url", r.URL)
+		nc.Log.Debug("GET", "url", r.URL)
 		r.Headers.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
 		r.Headers.Set("Accept-Encoding", "gzip, deflate, br, zstd")
 		r.Headers.Set("Accept-Language", "en-US,en;q=0.5")

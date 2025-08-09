@@ -1,10 +1,11 @@
-# Aguaxaca
+# Aguaxaca 🚰
 
 As of 2025, Oaxaca's water distribution schedules are shared daily
 through images, on two social networks: Facebook and X (formerly
-Twitter). I guess it's a workaround to format and message length
-limitations of these platforms, but it excludes people with visual
-disabilities, and also makes it impossible to search through this data.
+Twitter). I imagine that it's a workaround to message length and
+formatting limitations of these platforms. This is still annoying.
+It does exclude people with visual disabilities, and also makes it
+impossible to search through the data.
 
 This also forces the citizens to create accounts on privately owned
 social networks. There is no public historical data about the schedules,
@@ -17,7 +18,21 @@ technical, but it's a small workaround to:
 2. share the same data in text form (accessible!), and
 3. providing access to some historical records.
 
-**The project is still very much a work-in-progress. Don't use it now!**
+> [!CAUTION]
+> 🚧 The project is still very much a work-in-progress. Don't use it now!
+
+# Self hosting
+
+## Environment variables
+
+Required:
+
+- `ANTHROPIC_API_KEY`: Anthropic private API key, to extract image data.
+
+Optional:
+
+- `NITTER_HOST`: where we fetch tweets, defaults to `https://nitter.net`.
+- `NITTER_ACCOUNT`: Twitter/X handle, defaults to `SOAPA_Oax`.
 
 # Technical information
 
@@ -26,6 +41,7 @@ The repository is organized as follow:
 - `app/` —  the core application types.
 - `collector/` —  collect images from social networks.
 - `parser/` —  parse collected images into structured data structures.
+- `web/` —  web server.
 
 ## Data collection
 
