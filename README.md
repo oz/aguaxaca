@@ -23,13 +23,41 @@ technical, but it's a small workaround to:
 
 # Self hosting
 
+## Using docker
+
+A docker image is published on Docker Hub.
+
+To run the web server locally:
+
+```
+docker run ozzz/aguaxaca:latest -p 8080:8080 -v ./data:/data
+```
+
+The `./data` directory is where the program will store collected image
+files, and its SQLite database.
+
+Periodically, you can fetch fresh data by running:
+
+```
+docker run ozzz/aguaxaca:latest -v ./data:/data aguaxaca collect
+```
+
+To parse the data, usually right after a successfull "collect" run, use:
+
+```
+docker run ozzz/aguaxaca:latest -v ./data:/data aguaxaca analyze
+```
+
+Use `-e` or `--env-file` to pass relevant env. variables to the container.
+See below for a list of known variables.
+
 ## Environment variables
 
-Required:
+Required, for the analyze sub-command:
 
 - `ANTHROPIC_API_KEY`: Anthropic private API key, to extract image data.
 
-Optional:
+Optional, for the collect sub-command:
 
 - `NITTER_HOST`: where we fetch tweets, defaults to `https://nitter.net`.
 - `NITTER_ACCOUNT`: Twitter/X handle, defaults to `SOAPA_Oax`.
