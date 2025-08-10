@@ -18,6 +18,7 @@ package web
 
 import (
 	"context"
+	"embed"
 	"log/slog"
 	"net/http"
 	"os"
@@ -32,6 +33,9 @@ import (
 	"git.cypr.io/oz/aguaxaca/app"
 )
 
+//go:embed templates/*
+var content embed.FS
+
 // RequestTimeOut is 60 seconds
 const RequestTimeOut = 60
 
@@ -45,9 +49,9 @@ type Server struct {
 
 func NewServer(app *app.App) *Server {
 	tmpl := template.Must(
-		template.ParseFiles(
-			"web/templates/layout.html",
-			"web/templates/index.html",
+		template.ParseFS(content,
+			"templates/layout.html",
+			"templates/index.html",
 		),
 	)
 	return &Server{
