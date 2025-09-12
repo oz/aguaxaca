@@ -18,33 +18,46 @@ package workers
 
 import (
 	"context"
+	"time"
 
 	"git.cypr.io/oz/aguaxaca/app"
 	"github.com/go-co-op/gocron/v2"
 )
 
-type Workers struct {
+type Scheduler struct {
 	app   *app.App
 	sched gocron.Scheduler
 }
 
-func NewScheduler(app *app.App) *Workers {
-	sched, err := gocron.NewScheduler()
+func NewScheduler(app *app.App) *Scheduler {
+	sched, err := gocron.NewScheduler(gocron.WithLogger(app.Logger))
 	if err != nil {
-		panic(err)
+		app.Logger.Error("scheduler", "error", err)
+		return nil
 	}
-	return &Workers{app, sched}
+
+	// Run collectorJob hourly.
+	if _, err = sched.NewJob(
+		gocron.DurationJob(1*time.Hour),
+		gocron.NewTask(collectorJob, app),
+		gocron.WithSingletonMode(gocron.LimitModeReschedule),
+	); err != nil {
+		app.Logger.Error("scheduler", "error", err)
+		return nil
+	}
+
+	return &Scheduler{app, sched}
 }
 
 // Run go-cron scheduler until we're told to stop.
-func (w *Workers) Run(ctx context.Context) error {
-	w.app.Logger.Info("starting cron scheduler")
-	w.sched.Start()
+func (s *Scheduler) Run(ctx context.Context) error {
+	s.app.Logger.Info("starting cron scheduler")
+	s.sched.Start()
 	<-ctx.Done()
 	return nil
 }
 
-func (w *Workers) Shutdown(_ context.Context) error {
-	w.app.Logger.Info("shutting down cron scheduler")
-	return w.sched.Shutdown()
+func (s *Scheduler) Shutdown(_ context.Context) error {
+	s.app.Logger.Info("shutting down cron scheduler")
+	return s.sched.Shutdown()
 }

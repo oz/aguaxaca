@@ -57,3 +57,9 @@ UPDATE imports
 SET failed_at = unixepoch(),
     runs = runs + 1
 WHERE id = ?;
+
+-- name: GetLatestImport :one
+SELECT * FROM imports
+WHERE completed_at IS NOT NULL
+ORDER BY created_at DESC
+LIMIT 1;

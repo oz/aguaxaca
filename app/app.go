@@ -106,6 +106,9 @@ func (app *App) Start(components ...Component) error {
 	errChan := make(chan error, len(components))
 	var wg sync.WaitGroup
 	for _, component := range components {
+		if component == nil {
+			return fmt.Errorf("Cannot start a nil component")
+		}
 		wg.Add(1)
 		go func(comp Component) {
 			defer wg.Done()

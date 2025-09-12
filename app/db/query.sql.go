@@ -139,6 +139,28 @@ func (q *Queries) GetDelivery(ctx context.Context, id int64) (Delivery, error) {
 	return i, err
 }
 
+const getLatestImport = `-- name: GetLatestImport :one
+SELECT id, file_path, file_hash, created_at, completed_at, failed_at, runs FROM imports
+WHERE completed_at IS NOT NULL
+ORDER BY created_at DESC
+LIMIT 1
+`
+
+func (q *Queries) GetLatestImport(ctx context.Context) (Import, error) {
+	row := q.db.QueryRowContext(ctx, getLatestImport)
+	var i Import
+	err := row.Scan(
+		&i.ID,
+		&i.FilePath,
+		&i.FileHash,
+		&i.CreatedAt,
+		&i.CompletedAt,
+		&i.FailedAt,
+		&i.Runs,
+	)
+	return i, err
+}
+
 const getPendingImports = `-- name: GetPendingImports :many
 SELECT id, file_path, file_hash, created_at, completed_at, failed_at, runs FROM imports
 WHERE completed_at IS NULL
