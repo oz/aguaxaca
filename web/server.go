@@ -21,8 +21,6 @@ import (
 	"embed"
 	"log/slog"
 	"net/http"
-	"os"
-	"os/signal"
 	"text/template"
 	"time"
 
@@ -39,12 +37,10 @@ var content embed.FS
 // RequestTimeOut is 60 seconds
 const RequestTimeOut = 60
 
-// ShutdownGracePeriod allows 10 seconds for graceful shutdown.
-const ShutdownGracePeriod = 10
-
 type Server struct {
 	app       *app.App
 	templates *template.Template
+	server    *http.Server
 }
 
 func NewServer(app *app.App) *Server {
@@ -79,45 +75,20 @@ func (s *Server) NewHandler() http.Handler {
 }
 
 // Run starts an http.Server
-func (s *Server) Run() error {
+func (s *Server) Run(_ context.Context) error {
 	s.app.Logger.Info("starting web server", "address", s.app.ListenAddr)
-	server := &http.Server{Addr: s.app.ListenAddr, Handler: s.NewHandler()}
+	s.server = &http.Server{Addr: s.app.ListenAddr, Handler: s.NewHandler()}
 
-	// Ctrl-c ...
-	serverCtx, serverStopCtx := context.WithCancel(s.app.Ctx)
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, os.Interrupt)
-
-	go func() {
-		<-sig
-
-		// Allow 10s for graceful shutdown.
-		s.app.Logger.Info("shutting down")
-		shutdownCtx, _ := context.WithTimeout(serverCtx, ShutdownGracePeriod*time.Second)
-		go func() {
-			<-shutdownCtx.Done()
-			if shutdownCtx.Err() == context.DeadlineExceeded {
-				s.app.Logger.Error("graceful shutdown timed out")
-			}
-		}()
-
-		// Graceful shutdown
-		err := server.Shutdown(shutdownCtx)
-		if err != nil {
-			s.app.Logger.Error("shutdown", "error", err)
-			os.Exit(2)
-		}
-		serverStopCtx()
-	}()
-
-	err := server.ListenAndServe()
-	if err != nil && err != http.ErrServerClosed {
-		s.app.Logger.Error("ListenAndServe", "error", err)
-		os.Exit(2)
+	err := s.server.ListenAndServe()
+	if err != http.ErrServerClosed {
+		return err
 	}
-	<-serverCtx.Done()
-
 	return nil
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	s.app.Logger.Info("shutting down web server")
+	return s.server.Shutdown(ctx)
 }
 
 func (s *Server) loggerOptions() *httplog.Options {

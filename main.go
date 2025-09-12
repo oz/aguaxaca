@@ -24,6 +24,7 @@ import (
 
 	"git.cypr.io/oz/aguaxaca/app"
 	"git.cypr.io/oz/aguaxaca/web"
+	"git.cypr.io/oz/aguaxaca/workers"
 	"github.com/peterbourgon/ff/v3/ffcli"
 )
 
@@ -63,10 +64,11 @@ func main() {
 	// CLI command: aguaxaca server
 	serverCmd := &ffcli.Command{
 		Name:      "server",
-		ShortHelp: "Start web server",
+		ShortHelp: "Start web server + async workers",
 		Exec: func(context.Context, []string) error {
-			server := web.NewServer(app)
-			return server.Run()
+			serv := web.NewServer(app)
+			sched := workers.NewScheduler(app)
+			return app.Start(serv, sched)
 		},
 	}
 
