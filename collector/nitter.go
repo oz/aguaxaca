@@ -33,6 +33,14 @@ const DefaultBaseDomain = "https://nitter.net"
 // defaultDownloadDir is where images will be saved.
 const DefaultDownloadDir = "./images"
 
+type fileExistsError struct {
+	name string
+}
+
+func (e *fileExistsError) Error() string {
+	return fmt.Sprintf("File already exist: %s", e.name)
+}
+
 type NitterCollector struct {
 	BaseDomain  string
 	DownloadDir string
@@ -41,6 +49,10 @@ type NitterCollector struct {
 }
 
 // NewNitterCollector builds a default Nitter collector / scraper.
+// This is alright with a local, or private, Nitter instance. Better
+// alternatives would be using Nitter's RSS feeds, or get permission
+// to use a public instance. Do NOT use a public instance without
+// permission from the instance's operators.
 func NewNitterCollector(account string) *NitterCollector {
 	return &NitterCollector{
 		Account:     account,
@@ -83,6 +95,11 @@ func (nc *NitterCollector) DownloadImages() ([]string, error) {
 
 			file, err := nc.downloadImage(imgURL)
 			if err != nil {
+				// Silently ignore files that were already downloaded.
+				var fileExistsErr *fileExistsError
+				if errors.As(err, &fileExistsErr) {
+					return
+				}
 				nc.Log.Error("download error", "url", imgURL, "error", err)
 				return
 			}
@@ -111,7 +128,7 @@ func (nc *NitterCollector) downloadImage(url string) (string, error) {
 	// This check avoids an unnecessary copy from Colly's local cache.
 	if fileExists(dest) {
 		nc.Log.Debug("image already cached", "url", url)
-		return dest, nil
+		return dest, &fileExistsError{name: dest}
 	}
 	nc.Log.Info("downloading", "url", url, "dest", dest)
 
@@ -131,19 +148,15 @@ func (nc *NitterCollector) downloadImage(url string) (string, error) {
 }
 
 // Get a rude colly collector that mimicks Firefox headers.
-//
-// FIXME: this is okay for local testing/development. But this should
-// not be published. Either use Nitter's RSS feed, or a private
-// Nitter instance, or get permission.
 func (nc *NitterCollector) getFirefoxCollector() *colly.Collector {
 	c := colly.NewCollector(
 		// Hiding in plain sight...
-		colly.UserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:141.0) Gecko/20100101 Firefox/141.0"),
+		colly.UserAgent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0"),
 
 		// Don't use that with a public Nitter instance.
 		colly.IgnoreRobotsTxt(),
 
-		// TODO: CacheExpiration isn't automatic in colly v2.2.0.
+		// TODO: CacheExpiration isn't automatic in colly v2.
 		colly.CacheDir("cache"),
 	)
 	c.OnRequest(func(r *colly.Request) {
