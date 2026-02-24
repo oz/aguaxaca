@@ -1,8 +1,8 @@
 # Build the binary
-FROM golang:1.24-alpine AS build
+FROM golang:1.26-alpine AS build
 
 ENV PATH=/usr/local/go/bin:$PATH \
-    GOLANG_VERSION=1.24.6
+    GOLANG_VERSION=1.26.0
 
 WORKDIR /app
 COPY . .
