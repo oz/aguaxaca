@@ -24,6 +24,19 @@ INSERT INTO deliveries (
 )
 RETURNING *;
 
+-- name: CreateSublocation :one
+INSERT INTO sublocations (
+  delivery_id, name, created_at
+) VALUES (
+  ?, ?, unixepoch()
+)
+RETURNING *;
+
+-- name: GetSublocationsByDeliveryID :many
+SELECT * FROM sublocations
+WHERE delivery_id = ?
+ORDER BY name;
+
 -- name: DeleteDelivery :exec
 DELETE FROM deliveries
 WHERE id = ?;

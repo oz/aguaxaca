@@ -19,6 +19,7 @@ package app
 import (
 	"database/sql"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -97,16 +98,17 @@ func (a *Analyzer) ImportData(im *db.Import, csvData string) error {
 	queries := db.New(a.app.DB)
 	reader := csv.NewReader(strings.NewReader(csvData))
 
-	// Read header row
-	_, err := reader.Read()
+	// Read header row to detect sublocations
+	header, err := reader.Read()
 	if err != nil {
 		return fmt.Errorf("error reading CSV header: %w", err)
 	}
+	hasSublocations := len(header) > 4
 
 	for {
 		record, err := reader.Read()
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				break
 			}
 			return fmt.Errorf("error reading CSV record: %w", err)
@@ -117,15 +119,26 @@ func (a *Analyzer) ImportData(im *db.Import, csvData string) error {
 			return fmt.Errorf("invalid date format '%s': %w", record[0], err)
 		}
 
-		// Create delivery record with lowercase location_type
-		_, err = queries.CreateDelivery(a.app.Ctx, db.CreateDeliveryParams{
+		// Create delivery record with lowercase schedule and location_type.
+		delivery, err := queries.CreateDelivery(a.app.Ctx, db.CreateDeliveryParams{
 			Date:         db.UnixTime{Time: date.UTC()},
 			Schedule:     strings.ToLower(record[1]),
-			LocationType: strings.ToLower(record[2]), // Ensure lowercase
+			LocationType: strings.ToLower(record[2]),
 			LocationName: record[3],
 		})
 		if err != nil {
 			return fmt.Errorf("failed to create delivery: %w", err)
+		}
+
+		// Create sublocation record if present
+		if hasSublocations && len(record) > 4 && strings.TrimSpace(record[4]) != "" {
+			_, err = queries.CreateSublocation(a.app.Ctx, db.CreateSublocationParams{
+				DeliveryID: delivery.ID,
+				Name:       strings.TrimSpace(record[4]),
+			})
+			if err != nil {
+				return fmt.Errorf("failed to create sublocation: %w", err)
+			}
 		}
 	}
 

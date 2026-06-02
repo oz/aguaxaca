@@ -11,6 +11,17 @@ CREATE TABLE IF NOT EXISTS deliveries (
 
 CREATE INDEX IF NOT EXISTS idx_deliveries_date ON deliveries(date);
 
+-- sublocations stores sublocation information for deliveries
+CREATE TABLE IF NOT EXISTS sublocations (
+  id            INTEGER PRIMARY KEY,
+  delivery_id   INTEGER NOT NULL,
+  name          TEXT NOT NULL,
+  created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (delivery_id) REFERENCES deliveries(id) ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS idx_sublocations_delivery_id ON sublocations(delivery_id);
+
 -- imports is the "queue" for images with delivery data.
 CREATE TABLE IF NOT EXISTS imports (
   id           INTEGER PRIMARY KEY,

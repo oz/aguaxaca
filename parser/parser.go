@@ -27,9 +27,13 @@ import (
 
 const DefaultCSVPrompt = `Perform OCR on this image and extract the schedules (like "matutino" or "nocturno"), list of locations, and location types (like COLONIA or FRACCIONAMIENTOS, but always in singular form and downcased) from the text content.
 
+When a location name contains sublocations in parentheses, separate them into distinct entries. For example, if you find "Guadalupe Victoria (sectores 3 y 4 parte baja)", create separate entries for:
+- Location: "Guadalupe Victoria", Sublocation: "sector 3"
+- Location: "Guadalupe Victoria", Sublocation: "sector 4 parte baja"
 
-You will output the information using the CSV format, with the following columns: "date," "schedule," "location_type," "location_name". For the date column, use this format "YYYY-MM-DD" (for example "2025-03-14" for "14 de marzo de 2025"). Use correct quoting for attributes that may contain commas.
+You will output the information using the CSV format, with the following columns: "date," "schedule," "location_type," "location_name", "sublocation". For the date column, use this format "YYYY-MM-DD" (for example "2025-03-14" for "14 de marzo de 2025"). Use correct quoting for attributes that may contain commas.
 
+If there are no sublocations for a location, leave the sublocation field empty.
 
 Do not include more details about what the image is about, or other helpful text.`
 
