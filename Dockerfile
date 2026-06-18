@@ -2,7 +2,7 @@
 FROM golang:1.26-alpine AS build
 
 ENV PATH=/usr/local/go/bin:$PATH \
-    GOLANG_VERSION=1.26.0
+    GOLANG_VERSION=1.26.4
 
 WORKDIR /app
 COPY . .
