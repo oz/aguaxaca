@@ -109,16 +109,14 @@ func (app *App) Start(components ...Component) error {
 		if component == nil {
 			return fmt.Errorf("Cannot start a nil component")
 		}
-		wg.Add(1)
-		go func(comp Component) {
-			defer wg.Done()
-			if err := comp.Run(ctx); err != nil {
+		wg.Go(func() {
+			if err := component.Run(ctx); err != nil {
 				app.Logger.Error("runner", "error", err)
 				errChan <- err
 				// Shutdown everything on error.
 				cancel()
 			}
-		}(component)
+		})
 	}
 
 	select {
@@ -136,19 +134,18 @@ func (app *App) Start(components ...Component) error {
 	var shutdownWg sync.WaitGroup
 	shutdownErrors := make([]error, len(components))
 	for _, component := range components {
-		shutdownWg.Add(1)
-		go func(comp Component) {
-			defer shutdownWg.Done()
-			if err := comp.Shutdown(shutdownCtx); err != nil {
+		shutdownWg.Go(func() {
+			if err := component.Shutdown(shutdownCtx); err != nil {
 				app.Logger.Error("shutdown", "error", err)
 			}
-		}(component)
+		})
 	}
 
 	// Wait for all components to stop, or timeout.
 	shutdownDone := make(chan struct{})
 	go func() {
 		shutdownWg.Wait()
+		wg.Wait()
 		close(shutdownDone)
 	}()
 

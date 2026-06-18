@@ -45,7 +45,8 @@ type Server struct {
 
 func NewServer(app *app.App) *Server {
 	tmpl := template.Must(
-		template.ParseFS(content,
+		template.ParseFS(
+			content,
 			"templates/layout.html",
 			"templates/index.html",
 		),
@@ -93,13 +94,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 
 func (s *Server) loggerOptions() *httplog.Options {
 	opts := httplog.Options{
-		// Level defines the verbosity of the request logs:
-		// slog.LevelDebug - log all responses (incl. OPTIONS)
-		// slog.LevelInfo  - log responses (excl. OPTIONS)
-		// slog.LevelWarn  - log 4xx and 5xx responses only (except for 429)
-		// slog.LevelError - log 5xx responses only
 		Level: slog.LevelInfo,
-
 		// Set log output to Elastic Common Schema (ECS) format.
 		Schema: httplog.SchemaECS,
 
