@@ -45,7 +45,7 @@ func ParseFileWithPrompt(ctx context.Context, filePath string, prompt string) (s
 	client := anthropic.NewClient()
 	res, err := client.Messages.New(ctx, anthropic.MessageNewParams{
 		MaxTokens: 20000,
-		Model:     anthropic.ModelClaude4Sonnet20250514,
+		Model:     anthropic.ModelClaudeSonnet4_6,
 		Messages: []anthropic.MessageParam{
 			anthropic.NewUserMessage(
 				anthropic.NewTextBlock(prompt),
