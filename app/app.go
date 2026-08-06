@@ -80,8 +80,13 @@ func (app *App) Init(debug bool, listenAddr string) error {
 }
 
 func (app *App) InitDB() error {
-	// TODO: configurable path to SQLite DB
-	db, err := sql.Open("sqlite", "agua.db")
+	const (
+		// TODO: configurable dbPath.
+		dbPath  = "agua.db"
+		pragmas = "?_pragma=busy_timeout(10000)&_pragma=journal_mode(WAL)&_pragma=journal_size_limit(200000000)&_pragma=synchronous(NORMAL)&_pragma=foreign_keys(ON)&_pragma=temp_store(MEMORY)&_pragma=cache_size(-32000)"
+	)
+
+	db, err := sql.Open("sqlite", dbPath+pragmas)
 	if err != nil {
 		return fmt.Errorf("opening DB failed: %v", err)
 	}

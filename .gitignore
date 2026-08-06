@@ -3,6 +3,8 @@ images/*.jpg
 // SQLite files
 *.db
 *.db-journal
+*.db-shm
+*.db-wal
 *.sqbpro
 
 // Go build
