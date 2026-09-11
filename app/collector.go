@@ -1,5 +1,5 @@
 // This file is part of Aguaxaca.
-// Copyright (C) 2025 Arnaud Berthomier.
+// Copyright (C) 2026 Arnaud Berthomier.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ import (
 	"git.cypr.io/oz/aguaxaca/collector"
 )
 
-// SipHashKey is a prefectly random key (used to dedup files, not sensitive).
+// SipHashKey is a prefectly random key (used to dedup files, not a secret).
 var SipHashKey = [16]byte{
 	0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
 	0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,

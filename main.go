@@ -1,5 +1,5 @@
 // This file is part of Aguaxaca.
-// Copyright (C) 2025 Arnaud Berthomier.
+// Copyright (C) 2026 Arnaud Berthomier.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,8 +23,7 @@ import (
 	"os"
 
 	"git.cypr.io/oz/aguaxaca/app"
-	"git.cypr.io/oz/aguaxaca/web"
-	"git.cypr.io/oz/aguaxaca/workers"
+	"git.cypr.io/oz/aguaxaca/cmd"
 	"github.com/peterbourgon/ff/v3/ffcli"
 )
 
@@ -32,68 +31,30 @@ func main() {
 	ctx := context.Background()
 	app := app.NewApp(ctx)
 
-	// CLI command: aguaxaca collect
-	collectCmd := &ffcli.Command{
-		Name:      "collect",
-		ShortHelp: "Fetch latest water schedules",
-		Exec: func(context.Context, []string) error {
-			if err := app.DefaultCollector().Collect(); err != nil {
-				fmt.Printf("Error collecting schedules: %v\n", err)
-				os.Exit(2)
-			}
-
-			return nil
-		},
-	}
-
-	// CLI command: aguaxaca analyze
-	analyzeCmd := &ffcli.Command{
-		Name:      "analyze",
-		ShortHelp: "Analyze and extract data from collected images",
-		Exec: func(context.Context, []string) error {
-			analyzer := app.NewAnalyzer()
-			count, err := analyzer.ProcessPendingImports()
-			if err != nil {
-				fmt.Printf("Error analyzing images: %v", err)
-			}
-			fmt.Printf("Image analysis complete (%d).\n", count)
-			return nil
-		},
-	}
-
-	// CLI command: aguaxaca server
-	serverCmd := &ffcli.Command{
-		Name:      "server",
-		ShortHelp: "Start web server + async workers",
-		Exec: func(context.Context, []string) error {
-			serv := web.NewServer(app)
-			sched := workers.NewScheduler(app)
-			return app.Start(serv, sched)
-		},
-	}
-
-	// root command
-	rootFlagSet := flag.NewFlagSet("aguaxaca", flag.ExitOnError)
-	debug := rootFlagSet.Bool("debug", false, "log debug information")
-	listenAddr := rootFlagSet.String("listen", "localhost:8080", "listen address")
+	// Flags & sub-commands
+	fs := flag.NewFlagSet("aguaxaca", flag.ExitOnError)
+	debug := fs.Bool("debug", false, "log debug information")
+	//listenAddr := fs.String("listen", "localhost:8080", "listen address")
 	root := &ffcli.Command{
-		Name:        "aguaxaca",
-		ShortUsage:  "aguaxaca [OPTIONS] SUBCOMMAND ...",
-		FlagSet:     rootFlagSet,
-		Subcommands: []*ffcli.Command{collectCmd, analyzeCmd, serverCmd},
+		Name:       "aguaxaca",
+		ShortUsage: "aguaxaca [OPTIONS] SUBCOMMAND ...",
+		FlagSet:    fs,
+		Subcommands: []*ffcli.Command{
+			cmd.CollectCommand(app),
+			cmd.AnalyzeCommand(app),
+			cmd.ServerCommand(app),
+		},
 		Exec: func(context.Context, []string) error {
-			// The root command by itself has no use. Show usage help.
 			return flag.ErrHelp
 		},
 	}
-
 	if err := root.Parse(os.Args[1:]); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
-	// Configure App after flags parsing.
-	if err := app.Init(*debug, *listenAddr); err != nil {
+	// Configure App based on flags.
+	if err := app.Init(*debug); err != nil {
 		fmt.Fprintf(os.Stderr, "App init error: %v\n", err)
 		os.Exit(2)
 	}

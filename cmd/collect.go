@@ -14,10 +14,29 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <https://www.gnu.org/licenses/>.
 
-package collector
+package cmd
 
-// Collector is a basic interface for types that can download images to
-// be imported.
-type Collector interface {
-	DownloadImages() ([]string, error)
+import (
+	"context"
+	"fmt"
+	"os"
+
+	"git.cypr.io/oz/aguaxaca/app"
+	"github.com/peterbourgon/ff/v3/ffcli"
+)
+
+// CLI command: aguaxaca collect
+func CollectCommand(app *app.App) *ffcli.Command {
+	return &ffcli.Command{
+		Name:      "collect",
+		ShortHelp: "Fetch latest water schedules",
+		Exec: func(context.Context, []string) error {
+			if err := app.DefaultCollector().Collect(); err != nil {
+				fmt.Printf("Error collecting schedules: %v\n", err)
+				os.Exit(2)
+			}
+
+			return nil
+		},
+	}
 }

@@ -1,5 +1,5 @@
 // This file is part of Aguaxaca.
-// Copyright (C) 2025 Arnaud Berthomier.
+// Copyright (C) 2026 Arnaud Berthomier.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -66,8 +66,7 @@ func NewApp(ctx context.Context) *App {
 }
 
 // Init starts the app: connect DB handles, etc.
-func (app *App) Init(debug bool, listenAddr string) error {
-	app.ListenAddr = listenAddr
+func (app *App) Init(debug bool) error {
 	app.Debug = debug
 
 	// debug mode: use a new logger with lower level.
