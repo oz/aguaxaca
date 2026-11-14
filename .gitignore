@@ -4,6 +4,8 @@ images/*.jpg
 *.db
 *.db-journal
 *.sqbpro
+*.db-shm
+*.db-wal
 
 // Go build
 aguaxaca
