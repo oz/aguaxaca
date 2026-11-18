@@ -38,12 +38,14 @@ const DateFormat = "2006-01-02"
 type Analyzer struct {
 	app *App
 	log *slog.Logger
+	ocr parser.Extractor
 }
 
 func (app *App) NewAnalyzer() *Analyzer {
 	return &Analyzer{
 		app: app,
 		log: app.Logger,
+		ocr: parser.NewAnthropicExtractor(parser.DefaultCSVPrompt),
 	}
 }
 
@@ -61,7 +63,7 @@ func (a *Analyzer) ProcessPendingImports() (int, error) {
 		log := a.log.With("import", im.ID, "runs", im.Runs.Int64)
 
 		log.Info("analyzing image")
-		csvData, err := parser.ParseFileWithPrompt(a.app.Ctx, im.FilePath, parser.DefaultCSVPrompt)
+		csvData, err := a.ocr.Extract(a.app.Ctx, im.FilePath)
 		if err != nil {
 			log.Error("analyze error", "error", err.Error())
 
