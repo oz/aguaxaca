@@ -96,8 +96,7 @@ func (nc *NitterCollector) DownloadImages() ([]string, error) {
 			file, err := nc.downloadImage(imgURL)
 			if err != nil {
 				// Silently ignore files that were already downloaded.
-				var fileExistsErr *fileExistsError
-				if errors.As(err, &fileExistsErr) {
+				if _, ok := errors.AsType[*fileExistsError](err); ok {
 					return
 				}
 				nc.Log.Error("download error", "url", imgURL, "error", err)
@@ -112,7 +111,9 @@ func (nc *NitterCollector) DownloadImages() ([]string, error) {
 		nc.Log.Error("HTTP error", "status", r.StatusCode, "url", r.Request.URL, "error", err)
 	})
 
-	c.Visit(nc.BaseDomain + "/" + nc.Account)
+	if err := c.Visit(nc.BaseDomain + "/" + nc.Account); err != nil {
+		nc.Log.Error("visit account page", "err", err)
+	}
 	nc.Log.Debug("waiting for pending requests")
 	c.Wait()
 	nc.Log.Info("finished scraping")
@@ -141,7 +142,9 @@ func (nc *NitterCollector) downloadImage(url string) (string, error) {
 			}
 		}
 	})
-	c.Visit(url)
+	if err := c.Visit(url); err != nil {
+		nc.Log.Error("visit image URL", "err", err)
+	}
 	c.Wait()
 
 	return dest, nil

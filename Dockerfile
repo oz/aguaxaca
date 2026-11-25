@@ -19,7 +19,7 @@ RUN mkdir /data
 VOLUME ["/data"]
 WORKDIR /data
 
-ENV ANTHROPIC_API_KEY="secret" \
+ENV OPENROUTER_API_KEY="secret" \
     NITTER_HOST="http://nitter" \
     NITTER_ACCOUNT="SOAPA_Oax"
 

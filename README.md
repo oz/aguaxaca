@@ -54,7 +54,7 @@ See below for a list of known variables.
 
 Required, for the *analyze* sub-command:
 
-- `ANTHROPIC_API_KEY`: Anthropic private API key, to extract text from images.
+- `OPENROUTER_API_KEY`: OpenRouter API key, to extract text from images.
 
 Optional, for the *collect* sub-command:
 
@@ -105,15 +105,16 @@ Tesseract is an okay open-source OCR program, but because of the layout of
 SOAPA's images, it won't work well here. Instead, we rely on genAI for OCR-ing
 *and* formatting the output.
 
-We use Anthropic's APIs to extract information from the images (target is Sonnet
-4 model for now). This means that you will need an Anthropic API key with some
-credits to run the parser. Currently, this costs a few cents per image.
+We use OpenRouter's API (with the Thinking Machines inkling-2-small model for
+now) to extract information from the images. This means that you will need an
+OpenRouter API key with some credits to run the parser. Currently, this costs a
+few cents per image.
 
 With the correct hardware, using a local model would also work, but that's way
-more expensive than Anthropic for now. 💸
+more expensive than OpenRouter for now. 💸
 
 Look into `parser/parser.go` for a prompt that will extract information from
-SOAPA_Oax's publications. Here's a sample response from Sonnet 4.0:
+SOAPA_Oax's publications. Here's a sample response:
 
 ```
 date,schedule,location_type,location_name

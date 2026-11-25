@@ -4,12 +4,14 @@ go 1.27.4
 
 require (
 	github.com/anthropics/anthropic-sdk-go v1.84.0
+	github.com/avast/retry-go/v4 v4.7.0
 	github.com/dchest/siphash v1.2.3
 	github.com/go-chi/chi/v5 v5.2.2
 	github.com/go-chi/httplog/v3 v3.2.2
 	github.com/go-co-op/gocron/v2 v2.16.5
 	github.com/gocolly/colly/v2 v2.2.0
 	github.com/peterbourgon/ff/v3 v3.4.0
+	github.com/stretchr/testify v1.12.1
 	modernc.org/sqlite v1.38.0
 )
 
@@ -49,6 +51,7 @@ require (
 	go.opentelemetry.io/otel v1.33.0 // indirect
 	go.opentelemetry.io/otel/metric v1.33.0 // indirect
 	go.opentelemetry.io/otel/trace v1.33.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.5 // indirect
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
 	golang.org/x/net v0.42.0 // indirect

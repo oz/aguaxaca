@@ -107,7 +107,7 @@ func (app *App) Start(components ...Component) error {
 	var wg sync.WaitGroup
 	for _, component := range components {
 		if component == nil {
-			return fmt.Errorf("Cannot start a nil component")
+			return fmt.Errorf("cannot start a nil component")
 		}
 		wg.Go(func() {
 			if err := component.Run(ctx); err != nil {

@@ -110,6 +110,7 @@ func hashFile(filepath string) (uint64, error) {
 	if err != nil {
 		return 0, err
 	}
+	// nolint:errcheck // ignored
 	defer file.Close()
 
 	hasher := siphash.New(SipHashKey[:])

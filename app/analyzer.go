@@ -1,5 +1,5 @@
 // This file is part of Aguaxaca.
-// Copyright (C) 2025 Arnaud Berthomier.
+// Copyright (C) 2026 Arnaud Berthomier.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -38,12 +38,14 @@ const DateFormat = "2006-01-02"
 type Analyzer struct {
 	app *App
 	log *slog.Logger
+	ocr parser.Extractor
 }
 
 func (app *App) NewAnalyzer() *Analyzer {
 	return &Analyzer{
 		app: app,
 		log: app.Logger,
+		ocr: parser.NewOpenRouterExtractor(parser.DefaultCSVPrompt),
 	}
 }
 
@@ -61,7 +63,7 @@ func (a *Analyzer) ProcessPendingImports() (int, error) {
 		log := a.log.With("import", im.ID, "runs", im.Runs.Int64)
 
 		log.Info("analyzing image")
-		csvData, err := parser.ParseFileWithPrompt(a.app.Ctx, im.FilePath, parser.DefaultCSVPrompt)
+		csvData, err := a.ocr.Extract(a.app.Ctx, im.FilePath)
 		if err != nil {
 			log.Error("analyze error", "error", err.Error())
 
@@ -83,7 +85,7 @@ func (a *Analyzer) ProcessPendingImports() (int, error) {
 
 		// Update import state
 		if err := queries.CompleteImport(a.app.Ctx, im.ID); err != nil {
-			return imCount, fmt.Errorf("Error updating DB (CompleteImport) for #%d: %v", im.ID, err)
+			return imCount, fmt.Errorf("error updating db (CompleteImport) for #%d: %v", im.ID, err)
 		}
 		imCount += 1
 	}

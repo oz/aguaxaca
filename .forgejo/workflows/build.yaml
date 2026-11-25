@@ -1,0 +1,30 @@
+on: [push]
+jobs:
+  build:
+    runs-on: amd64
+    container:
+      image: golang:1.27-alpine
+    steps:
+      - name: install dependencies
+        # nodejs is required by the node-based actions below; tar for actions/cache;
+        # git for actions/checkout (alpine images don't ship it)
+        run: apk add --no-cache tar nodejs git
+      - name: checkout code
+        uses: actions/checkout@v6
+      - name: restore go cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            /go/pkg/mod
+            /root/.cache/go-build
+          key: "${{ runner.os }}-go-${{ hashFiles('go.sum') }}"
+          restore-keys: |
+             ${{ runner.os }}-go-
+      - name: build aguaxaca
+        run: CGO_ENABLED=0 go build -buildvcs=false -ldflags "-s -w" -o aguaxaca .
+      - name: lint - go vet
+        run: go vet
+      - name: lint - go fix
+        run: go fix
+      - name: test
+        run: go test -v ./...

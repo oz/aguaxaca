@@ -1,5 +1,5 @@
 // This file is part of Aguaxaca.
-// Copyright (C) 2025 Arnaud Berthomier.
+// Copyright (C) 2026 Arnaud Berthomier.
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,12 +18,7 @@ package parser
 
 import (
 	"context"
-	"encoding/base64"
-	"fmt"
-	"os"
 	"strings"
-
-	"github.com/anthropics/anthropic-sdk-go"
 )
 
 const DefaultCSVPrompt = `Perform OCR on this image and extract the schedules (like "matutino" or "nocturno"), list of locations, and location types (like COLONIA or FRACCIONAMIENTOS, but always in singular form and downcased) from the text content.
@@ -34,37 +29,15 @@ For the date column, use this format "YYYY-MM-DD" (for example "2025-03-14" for 
 
 Do not include anything else apart from the CSV output.`
 
-// ParseFileWithPrompt queries Anthropic with a file attachment, prompting as indicated, and returns the resulting text.
-func ParseFileWithPrompt(ctx context.Context, filePath string, prompt string) (string, error) {
-	file, err := os.ReadFile(filePath)
-	if err != nil {
-		return "", fmt.Errorf("can't read file %s: %w", filePath, err)
-	}
-	encodedData := base64.StdEncoding.EncodeToString(file)
+type Extractor interface {
+	Extract(ctx context.Context, filePath string) (string, error)
+}
 
-	// API key is set with: os.LookupEnv("ANTHROPIC_API_KEY")
-	client := anthropic.NewClient()
-	res, err := client.Messages.New(ctx, anthropic.MessageNewParams{
-		MaxTokens: 20000,
-		Model:     anthropic.ModelClaudeSonnet5,
-		Messages: []anthropic.MessageParam{
-			anthropic.NewUserMessage(
-				anthropic.NewTextBlock(prompt),
-				anthropic.NewImageBlockBase64("image/jpeg", encodedData),
-			),
-		},
-	})
-	if err != nil {
-		return "", fmt.Errorf("Anthropic error for %s: %w", filePath, err)
-	}
-
-	text := res.Content[len(res.Content)-1].Text
-
-	// Did the Anthropic LLM obey our instructions?
+// stripCSVFence removes the markdown code fence some LLMs wrap around the
+// CSV output (despite being told not to).
+func stripCSVFence(text string) string {
 	if !strings.HasPrefix(text, "```csv\n") {
-		return text, nil
+		return text
 	}
-
-	// No it did not. Strip the markdown markup around the valuable data.
-	return strings.TrimSuffix(strings.TrimPrefix(text, "```csv\n"), "\n```"), nil
+	return strings.TrimSuffix(strings.TrimPrefix(text, "```csv\n"), "\n```")
 }
