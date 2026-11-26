@@ -20,8 +20,9 @@ VOLUME ["/data"]
 WORKDIR /data
 
 ENV OPENROUTER_API_KEY="secret" \
-    NITTER_HOST="http://nitter" \
-    NITTER_ACCOUNT="SOAPA_Oax"
+    TWITTERAPI_IO_API_KEY="secret" \
+    COLLECTOR="twitterapi" \
+    TWITTER_ACCOUNT="SOAPA_Oax"
 
 USER nobody
 CMD ["/usr/bin/aguaxaca", "-listen", ":8080", "server"]

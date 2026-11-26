@@ -21,6 +21,7 @@ import (
 	"io"
 	"log/slog"
 	"os"
+	"strings"
 
 	"github.com/dchest/siphash"
 
@@ -41,21 +42,51 @@ type Collector struct {
 }
 
 func (app *App) DefaultCollector() *Collector {
-	account := os.Getenv("NITTER_ACCOUNT")
+	account := os.Getenv("TWITTER_ACCOUNT")
 	if account == "" {
 		account = "SOAPA_Oax"
 	}
-	nitter := collector.NewNitterCollector(account)
 
-	if nitterHost := os.Getenv("NITTER_HOST"); nitterHost != "" {
-		nitter.BaseDomain = nitterHost
+	backend := strings.ToLower(os.Getenv("COLLECTOR"))
+	if backend == "" {
+		backend = "twitterapi"
 	}
-	nitter.Log = app.Logger
 
-	return &Collector{
-		app:       app,
-		collector: nitter,
-		log:       app.Logger.With("collector", "nitter"),
+	switch backend {
+	case "twitterapi":
+		apiKey := os.Getenv("TWITTERAPI_IO_API_KEY")
+		if apiKey == "" {
+			app.Logger.Error("TWITTERAPI_IO_API_KEY is not set")
+		}
+		tw := collector.NewTwitterAPICollector(account, apiKey)
+		tw.Log = app.Logger
+		return &Collector{
+			app:       app,
+			collector: tw,
+			log:       app.Logger.With("collector", "twitterapi"),
+		}
+
+	case "nitter":
+		nitter := collector.NewNitterCollector(account)
+		if nitterHost := os.Getenv("NITTER_HOST"); nitterHost != "" {
+			nitter.BaseDomain = nitterHost
+		}
+		nitter.Log = app.Logger
+		return &Collector{
+			app:       app,
+			collector: nitter,
+			log:       app.Logger.With("collector", "nitter"),
+		}
+
+	default:
+		app.Logger.Error("unknown COLLECTOR backend, defaulting to twitterapi", "value", backend)
+		tw := collector.NewTwitterAPICollector(account, os.Getenv("TWITTERAPI_IO_API_KEY"))
+		tw.Log = app.Logger
+		return &Collector{
+			app:       app,
+			collector: tw,
+			log:       app.Logger.With("collector", "twitterapi"),
+		}
 	}
 }
 

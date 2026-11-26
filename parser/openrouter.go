@@ -92,8 +92,10 @@ func (e *OpenRouterExtractor) Extract(ctx context.Context, filePath string) (str
 		if err == nil {
 			return nil
 		}
-		var apiErr *APIError
-		if errors.As(err, &apiErr) && apiErr.StatusCode != http.StatusTooManyRequests && apiErr.StatusCode < 500 {
+
+		if apiErr, ok := errors.AsType[*APIError](err); ok &&
+			apiErr.StatusCode != http.StatusTooManyRequests &&
+			apiErr.StatusCode < 500 {
 			return retry.Unrecoverable(err)
 		}
 		return err

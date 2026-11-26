@@ -33,14 +33,6 @@ const DefaultBaseDomain = "https://nitter.net"
 // defaultDownloadDir is where images will be saved.
 const DefaultDownloadDir = "./images"
 
-type fileExistsError struct {
-	name string
-}
-
-func (e *fileExistsError) Error() string {
-	return fmt.Sprintf("File already exist: %s", e.name)
-}
-
 type NitterCollector struct {
 	BaseDomain  string
 	DownloadDir string
@@ -177,10 +169,3 @@ func (nc *NitterCollector) getFirefoxCollector() *colly.Collector {
 	return c
 }
 
-func fileExists(filename string) bool {
-	info, err := os.Stat(filename)
-	if os.IsNotExist(err) {
-		return false
-	}
-	return !info.IsDir()
-}

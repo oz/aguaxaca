@@ -16,8 +16,29 @@
 
 package collector
 
+import (
+	"fmt"
+	"os"
+)
+
 // Collector is a basic interface for types that can download images to
 // be imported.
 type Collector interface {
 	DownloadImages() ([]string, error)
+}
+
+type fileExistsError struct {
+	name string
+}
+
+func (e *fileExistsError) Error() string {
+	return fmt.Sprintf("file already exist: %s", e.name)
+}
+
+func fileExists(filename string) bool {
+	info, err := os.Stat(filename)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return !info.IsDir()
 }
